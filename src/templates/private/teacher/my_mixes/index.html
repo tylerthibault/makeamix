@@ -1,0 +1,377 @@
+{% extends 'bases/private.html' %}
+
+{% block nav %}
+    {% include 'private/components/nav.html' %}
+    
+    <!-- Custom nav override to show active state for My Mixes -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mark My Mixes as active
+            const myMixesLink = document.querySelector('a[href*="my_mixes"]');
+            if (myMixesLink) {
+                myMixesLink.classList.add('side-nav__item--active');
+            }
+        });
+    </script>
+{% endblock nav %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages mb-4">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                                <i class="bi bi-{{ 'exclamation-circle' if category == 'error' else 'check-circle' if category == 'success' else 'info-circle' }} me-2"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <!-- Page Header -->
+            <div class="page-header mb-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="page-title">
+                            <i class="bi bi-collection me-3"></i>
+                            My Mixes
+                        </h1>
+                        <p class="page-subtitle text-muted">
+                            Manage your music collections and individual tracks
+                        </p>
+                    </div>
+                    <div class="page-actions">
+                        <a href="{{ url_for('music.create_mix') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-lg me-2"></i>
+                            Create New Mix
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-sm-6 col-lg-3">
+                    <div class="stat-card">
+                        <div class="stat-card__icon">
+                            <i class="bi bi-collection"></i>
+                        </div>
+                        <div class="stat-card__content">
+                            <div class="stat-card__number">{{ user_mixes|length or 0 }}</div>
+                            <div class="stat-card__label">Total Albums</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <div class="stat-card">
+                        <div class="stat-card__icon">
+                            <i class="bi bi-music-note"></i>
+                        </div>
+                        <div class="stat-card__content">
+                            <div class="stat-card__number">{{ total_songs or 0 }}</div>
+                            <div class="stat-card__label">Total Songs</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <div class="stat-card">
+                        <div class="stat-card__icon">
+                            <i class="bi bi-eye"></i>
+                        </div>
+                        <div class="stat-card__content">
+                            <div class="stat-card__number">{{ total_plays or 0 }}</div>
+                            <div class="stat-card__label">Total Plays</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <div class="stat-card">
+                        <div class="stat-card__icon">
+                            <i class="bi bi-heart"></i>
+                        </div>
+                        <div class="stat-card__content">
+                            <div class="stat-card__number">{{ total_likes or 0 }}</div>
+                            <div class="stat-card__label">Total Likes</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Tabs -->
+            <div class="content-tabs">
+                <ul class="nav nav-tabs custom-tabs" id="myMixesTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="albums-tab" data-bs-toggle="tab" data-bs-target="#albums-pane" 
+                                type="button" role="tab" aria-controls="albums-pane" aria-selected="true">
+                            <i class="bi bi-collection me-2"></i>
+                            My Albums
+                            <span class="badge bg-secondary ms-2">{{ user_mixes|length or 0 }}</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="songs-tab" data-bs-toggle="tab" data-bs-target="#songs-pane" 
+                                type="button" role="tab" aria-controls="songs-pane" aria-selected="false">
+                            <i class="bi bi-music-note-list me-2"></i>
+                            All Songs
+                            <span class="badge bg-secondary ms-2">{{ total_songs or 0 }}</span>
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="myMixesTabContent">
+                    <!-- Albums Tab -->
+                    <div class="tab-pane fade show active" id="albums-pane" role="tabpanel" aria-labelledby="albums-tab">
+                        <div class="tab-content-header">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h3 class="tab-title">My Albums</h3>
+                                <div class="view-controls">
+                                    <div class="btn-group" role="group" aria-label="View toggle">
+                                        <button type="button" class="btn btn-outline-secondary active" id="gridViewBtn">
+                                            <i class="bi bi-grid"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary" id="listViewBtn">
+                                            <i class="bi bi-list"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Albums Grid/List -->
+                        <div class="albums-container" id="albumsContainer">
+                            {% if user_mixes %}
+                                <div class="albums-grid" id="albumsGrid">
+                                    {% for mix in user_mixes %}
+                                    <div class="album-card">
+                                        <div class="album-card__image">
+                                            {% if mix.cover_image %}
+                                                <img src="{{ url_for('static', filename='uploads/covers/' + mix.cover_image) }}" 
+                                                     alt="{{ mix.title }}" loading="lazy">
+                                            {% else %}
+                                                <div class="album-card__placeholder">
+                                                    <i class="bi bi-music-note-beamed"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div class="album-card__overlay">
+                                                <button class="btn btn-primary btn-sm play-album-btn" data-album-id="{{ mix.id }}">
+                                                    <i class="bi bi-play-fill"></i>
+                                                </button>
+                                                <div class="album-card__actions">
+                                                    <button class="btn btn-outline-light btn-sm" title="Edit Album" data-bs-toggle="modal" data-bs-target="#editAlbumModal" data-album-id="{{ mix.id }}">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-light btn-sm" title="Share Album">
+                                                        <i class="bi bi-share"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-danger btn-sm delete-album-btn" title="Delete Album" 
+                                                            data-album-id="{{ mix.id }}" data-album-title="{{ mix.title }}">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="album-card__content">
+                                            <h4 class="album-card__title">{{ mix.title }}</h4>
+                                            <p class="album-card__info">
+                                                {{ mix.song_count or 0 }} songs • {{ mix.total_duration or '0:00' }}
+                                            </p>
+                                            <div class="album-card__meta">
+                                                <span class="album-card__genre">{{ mix.genre or 'Unknown' }}</span>
+                                                <span class="album-card__visibility">
+                                                    <i class="bi bi-{{ 'globe' if mix.visibility == 'public' else 'people' if mix.visibility == 'class' else 'lock' }}"></i>
+                                                    {{ mix.visibility|title }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="empty-state">
+                                    <div class="empty-state__icon">
+                                        <i class="bi bi-collection"></i>
+                                    </div>
+                                    <h3 class="empty-state__title">No Albums Yet</h3>
+                                    <p class="empty-state__message">
+                                        Start creating your first music album to organize your tracks.
+                                    </p>
+                                    <a href="{{ url_for('music.create_mix') }}" class="btn btn-primary">
+                                        <i class="bi bi-plus-lg me-2"></i>
+                                        Create First Album
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Songs Tab -->
+                    <div class="tab-pane fade" id="songs-pane" role="tabpanel" aria-labelledby="songs-tab">
+                        <div class="tab-content-header">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h3 class="tab-title">All Songs</h3>
+                                <div class="search-filters">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="songSearch" placeholder="Search songs...">
+                                        <button class="btn btn-outline-secondary" type="button" id="searchBtn">
+                                            <i class="bi bi-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Songs Table -->
+                        <div class="songs-container">
+                            {% if all_songs %}
+                                <div class="songs-table-container">
+                                    <table class="table songs-table">
+                                        <thead>
+                                            <tr>
+                                                <th width="50">#</th>
+                                                <th>Title</th>
+                                                <th>Artist</th>
+                                                <th>Album</th>
+                                                <th>Duration</th>
+                                                <th>Plays</th>
+                                                <th width="120">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="songsTableBody">
+                                            {% for song in all_songs %}
+                                            <tr class="song-row" data-song-id="{{ song.id }}">
+                                                <td>
+                                                    <button class="btn btn-link btn-sm play-song-btn" data-song-id="{{ song.id }}">
+                                                        <i class="bi bi-play-fill"></i>
+                                                    </button>
+                                                </td>
+                                                <td>
+                                                    <div class="song-info">
+                                                        <div class="song-title">{{ song.title }}</div>
+                                                        {% if song.explicit %}
+                                                            <span class="badge badge-explicit">E</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </td>
+                                                <td class="text-muted">{{ song.artist or 'Unknown Artist' }}</td>
+                                                <td>
+                                                    <a href="#" class="album-link" data-album-id="{{ song.mix_id }}">
+                                                        {{ song.mix_title or 'Unknown Album' }}
+                                                    </a>
+                                                </td>
+                                                <td class="text-muted">{{ song.duration or '0:00' }}</td>
+                                                <td class="text-muted">{{ song.play_count or 0 }}</td>
+                                                <td>
+                                                    <div class="song-actions">
+                                                        <button class="btn btn-link btn-sm" title="Edit Song" data-bs-toggle="modal" data-bs-target="#editSongModal" data-song-id="{{ song.id }}">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </button>
+                                                        <button class="btn btn-link btn-sm" title="Download">
+                                                            <i class="bi bi-download"></i>
+                                                        </button>
+                                                        <button class="btn btn-link btn-sm text-danger delete-song-btn" title="Delete Song" 
+                                                                data-song-id="{{ song.id }}" data-song-title="{{ song.title }}">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="empty-state">
+                                    <div class="empty-state__icon">
+                                        <i class="bi bi-music-note-list"></i>
+                                    </div>
+                                    <h3 class="empty-state__title">No Songs Yet</h3>
+                                    <p class="empty-state__message">
+                                        Upload your first song to start building your music library.
+                                    </p>
+                                    <a href="{{ url_for('music.create_mix') }}" class="btn btn-primary">
+                                        <i class="bi bi-cloud-arrow-up me-2"></i>
+                                        Upload First Song
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Album Modal -->
+<div class="modal fade" id="editAlbumModal" tabindex="-1" aria-labelledby="editAlbumModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editAlbumModalLabel">
+                    <i class="bi bi-pencil me-2"></i>
+                    Edit Album
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editAlbumForm" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="edit_album">
+                <input type="hidden" name="album_id" id="editAlbumId">
+                <div class="modal-body">
+                    <!-- Edit form fields will be populated by JavaScript -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-2"></i>
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Song Modal -->
+<div class="modal fade" id="editSongModal" tabindex="-1" aria-labelledby="editSongModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editSongModalLabel">
+                    <i class="bi bi-pencil me-2"></i>
+                    Edit Song
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editSongForm" method="POST">
+                <input type="hidden" name="action" value="edit_song">
+                <input type="hidden" name="song_id" id="editSongId">
+                <div class="modal-body">
+                    <!-- Edit form fields will be populated by JavaScript -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-2"></i>
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/my_mixes.css') }}">
+{% endblock css %}
+
+{% block js %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/pages/my_mixes.js') }}"></script>
+{% endblock js %}

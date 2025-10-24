@@ -1,0 +1,254 @@
+{% extends 'bases/public.html' %}
+
+{% block head %}
+<meta name="description" content="Login to MakeAMix - Access your music mixing dashboard and continue creating amazing mixes.">
+<meta name="keywords" content="login, music mixing, DJ, beats, MakeAMix">
+{% endblock head %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components/auth.css') }}">
+{% endblock css %}
+
+{% block content %}
+<section class="auth-login min-vh-100 d-flex align-items-center position-relative">
+    <!-- Background Elements -->
+    <div class="auth-bg-elements">
+        <div class="auth-particle auth-particle-1"></div>
+        <div class="auth-particle auth-particle-2"></div>
+        <div class="auth-particle auth-particle-3"></div>
+        <div class="auth-particle auth-particle-4"></div>
+        <div class="auth-particle auth-particle-5"></div>
+    </div>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-5 col-md-7">
+                <div class="auth-card bg-white rounded-4 shadow-lg p-5 position-relative">
+                    <!-- Music Theme Header -->
+                    <div class="text-center mb-4">
+                        <div class="auth-logo-container bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3">
+                            <i class="bi bi-music-note-beamed text-white"></i>
+                        </div>
+                        <h1 class="h3 fw-bold text-dark mb-2">Welcome Back</h1>
+                        <p class="text-muted">Sign in to continue mixing</p>
+                    </div>
+
+                    <!-- Login Form -->
+                    <form class="auth-form" method="POST" action="{{ url_for('user.login') }}">
+                        {{ csrf_token() if csrf_token }}
+                        
+                        <!-- Email/Username Field -->
+                        <div class="mb-4">
+                            <label for="email" class="form-label fw-semibold text-dark">
+                                <i class="bi bi-envelope me-2 text-primary"></i>Email Address
+                            </label>
+                            <input type="email" 
+                                   class="form-control form-control-lg auth-input" 
+                                   id="email" 
+                                   name="email" 
+                                   placeholder="Enter your email"
+                                   required
+                                   value="{{ request.form.email if request.form.email }}">
+                            {% if errors and errors.email %}
+                                <div class="invalid-feedback d-block">
+                                    <i class="bi bi-exclamation-circle me-1"></i>{{ errors.email }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Password Field -->
+                        <div class="mb-4">
+                            <label for="password" class="form-label fw-semibold text-dark">
+                                <i class="bi bi-shield-lock me-2 text-primary"></i>Password
+                            </label>
+                            <div class="position-relative">
+                                <input type="password" 
+                                       class="form-control form-control-lg auth-input" 
+                                       id="password" 
+                                       name="password" 
+                                       placeholder="Enter your password"
+                                       required>
+                                <button type="button" 
+                                        class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-3 auth-password-toggle"
+                                        onclick="togglePassword()">
+                                    <i class="bi bi-eye text-muted" id="passwordToggleIcon"></i>
+                                </button>
+                            </div>
+                            {% if errors and errors.password %}
+                                <div class="invalid-feedback d-block">
+                                    <i class="bi bi-exclamation-circle me-1"></i>{{ errors.password }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Remember Me & Forgot Password -->
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="remember" name="remember">
+                                <label class="form-check-label text-muted" for="remember">
+                                    Remember me
+                                </label>
+                            </div>
+                            <a href="{{ url_for('user.forgot_password') }}" class="text-primary text-decoration-none">
+                                Forgot password?
+                            </a>
+                        </div>
+
+                        <!-- Error Messages -->
+                        {% if errors and errors.general %}
+                            <div class="alert alert-danger d-flex align-items-center mb-4">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                {{ errors.general }}
+                            </div>
+                        {% endif %}
+
+                        <!-- Flash Messages -->
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} d-flex align-items-center mb-4">
+                                        <i class="bi bi-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' }} me-2"></i>
+                                        {{ message }}
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+
+                        <!-- Login Button -->
+                        <button type="submit" class="btn btn-primary btn-lg w-100 mb-4 auth-submit-btn">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>
+                            <span class="auth-btn-text">Sign In</span>
+                            <div class="auth-btn-loader d-none">
+                                <div class="spinner-border spinner-border-sm me-2" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                Signing in...
+                            </div>
+                        </button>
+                    </form>
+
+                    <!-- Sign Up Link -->
+                    <div class="text-center pt-4 border-top">
+                        <p class="text-muted mb-2">
+                            <strong>Teachers:</strong> 
+                            <a href="{{ url_for('user.register') }}" class="text-primary text-decoration-none fw-semibold">
+                                Create educator account
+                            </a>
+                        </p>
+                        <p class="text-muted small mb-0">
+                            <i class="bi bi-info-circle me-1"></i>
+                            <strong>Students:</strong> Your teacher will create your account when setting up their class
+                        </p>
+                    </div>
+
+                    <!-- Music Theme Footer -->
+                    <div class="auth-music-footer text-center mt-4">
+                        <div class="d-flex justify-content-center align-items-center gap-2 text-muted">
+                            <i class="bi bi-music-note"></i>
+                            <small>Ready to make some beats?</small>
+                            <i class="bi bi-music-note"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Info Card -->
+                <div class="auth-info-card bg-primary-gradient rounded-4 p-4 mt-4 text-white text-center">
+                    <h5 class="fw-bold mb-3">
+                        <i class="bi bi-lightning-charge me-2"></i>Quick Start Tips
+                    </h5>
+                    <div class="row g-3">
+                        <div class="col-4">
+                            <i class="bi bi-upload fs-3 mb-2 d-block"></i>
+                            <small>Upload Tracks</small>
+                        </div>
+                        <div class="col-4">
+                            <i class="bi bi-sliders fs-3 mb-2 d-block"></i>
+                            <small>Mix & Edit</small>
+                        </div>
+                        <div class="col-4">
+                            <i class="bi bi-share fs-3 mb-2 d-block"></i>
+                            <small>Share & Export</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- JavaScript for Login Functionality -->
+<script>
+// Password visibility toggle
+function togglePassword() {
+    const passwordInput = document.getElementById('password');
+    const toggleIcon = document.getElementById('passwordToggleIcon');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.className = 'bi bi-eye-slash text-muted';
+    } else {
+        passwordInput.type = 'password';
+        toggleIcon.className = 'bi bi-eye text-muted';
+    }
+}
+
+// Form submission with loading state
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.auth-form');
+    const submitBtn = document.querySelector('.auth-submit-btn');
+    const btnText = document.querySelector('.auth-btn-text');
+    const btnLoader = document.querySelector('.auth-btn-loader');
+
+    if (form && submitBtn) {
+        form.addEventListener('submit', function() {
+            submitBtn.disabled = true;
+            btnText.classList.add('d-none');
+            btnLoader.classList.remove('d-none');
+        });
+    }
+
+    // Auto-focus first input
+    const firstInput = document.querySelector('.auth-input');
+    if (firstInput) {
+        firstInput.focus();
+    }
+
+    // Enhanced form validation
+    const inputs = document.querySelectorAll('.auth-input');
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            validateInput(this);
+        });
+        
+        input.addEventListener('input', function() {
+            if (this.classList.contains('is-invalid')) {
+                validateInput(this);
+            }
+        });
+    });
+});
+
+function validateInput(input) {
+    const value = input.value.trim();
+    const type = input.type;
+    
+    // Remove existing validation classes
+    input.classList.remove('is-valid', 'is-invalid');
+    
+    if (type === 'email') {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (value && emailRegex.test(value)) {
+            input.classList.add('is-valid');
+        } else if (value) {
+            input.classList.add('is-invalid');
+        }
+    } else if (type === 'password') {
+        if (value && value.length >= 6) {
+            input.classList.add('is-valid');
+        } else if (value) {
+            input.classList.add('is-invalid');
+        }
+    }
+}
+</script>
+{% endblock content %}

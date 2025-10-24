@@ -1,0 +1,45 @@
+<!-- Side Navigation -->
+<nav class="side-nav" id="sideNav">
+    <div class="side-nav__header">
+        <a href="{{ url_for('user.dashboard') }}" class="side-nav__brand">
+            Make a Mix
+        </a>
+    </div>
+
+    <div class="side-nav__menu">
+        <!-- Default navigation items -->
+        <div class="side-nav__section">Dashboard</div>
+        <a href="{{ url_for('user.dashboard') }}" class="side-nav__item">
+            <i class="bi bi-house"></i>
+            Home
+        </a>
+
+        <div class="side-nav__section">Features</div>
+        <a href="{{ url_for('music.create_mix') }}" class="side-nav__item">
+            <i class="bi bi-music-note-beamed"></i>
+            Create Mix
+        </a>
+        <a href="{{ url_for('music.list_mixes') }}" class="side-nav__item">
+            <i class="bi bi-collection"></i>
+            My Mixes
+        </a>
+        <a href="{{ url_for('music.discover_mixes') }}" class="side-nav__item">
+            <i class="bi bi-search"></i>
+            Discover
+        </a>
+
+        <div class="side-nav__section">Account</div>
+        <a href="#" class="side-nav__item">
+            <i class="bi bi-person"></i>
+            Profile
+        </a>
+        <a href="#" class="side-nav__item">
+            <i class="bi bi-gear"></i>
+            Settings
+        </a>
+        <a href="{{ url_for('user.logout') }}" class="side-nav__item">
+            <i class="bi bi-box-arrow-right"></i>
+            Logout
+        </a>
+    </div>
+</nav>

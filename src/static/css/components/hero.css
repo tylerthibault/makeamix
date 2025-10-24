@@ -1,0 +1,314 @@
+/* ============================================
+   Hero Components CSS
+   All hero-related styles following the style guide
+   ============================================ */
+
+/* Hero Base Classes */
+.hero-gradient {
+    background: var(--primary-gradient);
+    opacity: 0.9;
+    overflow: hidden;
+}
+
+.hero-video {
+    min-height: 100vh;
+}
+
+.hero-minimal {
+    min-height: 100vh;
+}
+
+/* Gradient Hero Background */
+.hero-gradient-bg {
+    background: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-secondary) 50%, #e91e63 100%);
+    opacity: 0.9;
+}
+
+/* Floating Music Notes Animations */
+.floating-note {
+    animation: floating 3s ease-in-out infinite;
+}
+
+.floating-note-1 {
+    top: 20%;
+    left: 10%;
+    animation-delay: 0s;
+}
+
+.floating-note-2 {
+    top: 60%;
+    left: 80%;
+    animation-delay: 2s;
+}
+
+.floating-note-3 {
+    top: 30%;
+    left: 75%;
+    animation-delay: 4s;
+}
+
+.floating-note-4 {
+    top: 70%;
+    left: 15%;
+    animation-delay: 1s;
+}
+
+/* Spinning Disc Animation */
+.spinning-disc {
+    animation: spin 8s linear infinite;
+}
+
+/* Bouncing Arrow */
+.bouncing-arrow {
+    animation: bounce 2s ease-in-out infinite;
+}
+
+/* Backdrop Blur Effect */
+.backdrop-blur {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* Video Hero Demo Mixer */
+.mixer-demo-container {
+    max-width: 400px;
+}
+
+.mixer-control-btn {
+    width: 50px;
+    height: 50px;
+}
+
+.progress-bar-height {
+    height: 6px;
+}
+
+/* Particles System */
+.particle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: var(--bs-primary);
+    border-radius: 50%;
+    animation: particleFloat 6s ease-in-out infinite;
+    opacity: 0.7;
+}
+
+.particle-1 {
+    top: 10%;
+    left: 5%;
+    animation-delay: 0s;
+}
+
+.particle-2 {
+    top: 20%;
+    left: 90%;
+    animation-delay: 2s;
+}
+
+.particle-3 {
+    top: 80%;
+    left: 10%;
+    animation-delay: 4s;
+}
+
+.particle-4 {
+    top: 60%;
+    left: 80%;
+    animation-delay: 1s;
+}
+
+.particle-5 {
+    top: 40%;
+    left: 50%;
+    animation-delay: 3s;
+}
+
+.particle-6 {
+    top: 15%;
+    left: 70%;
+    animation-delay: 5s;
+}
+
+.particle-7 {
+    top: 85%;
+    left: 60%;
+    animation-delay: 2.5s;
+}
+
+.particle-8 {
+    top: 25%;
+    left: 30%;
+    animation-delay: 3.5s;
+}
+
+/* Floating Ring Animation */
+.floating-ring {
+    animation: ringFloat 4s ease-in-out infinite;
+    width: 140px;
+    height: 140px;
+    opacity: 0.3;
+}
+
+/* Logo Icon Container */
+.hero-logo-container {
+    width: 120px;
+    height: 120px;
+    font-size: 3rem;
+}
+
+/* Stats Cards Hover Effect */
+.hero-stats-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hero-stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+}
+
+/* Trust Icons */
+.trust-icon {
+    transition: transform 0.3s ease;
+    cursor: pointer;
+}
+
+.trust-icon:hover {
+    transform: translateY(-3px);
+}
+
+.trust-icon:hover i {
+    color: var(--bs-primary) !important;
+}
+
+/* Button Enhancements */
+.hero-btn {
+    transition: all 0.3s ease;
+}
+
+.hero-btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Mixer Demo Enhancements */
+.mixer-demo .btn:hover {
+    animation: pulse 0.5s ease-in-out;
+}
+
+.mixer-progress-bar {
+    transition: width 0.3s ease;
+}
+
+/* Range Slider Styling */
+.form-range::-webkit-slider-thumb {
+    background: var(--bs-primary);
+}
+
+.form-range::-moz-range-thumb {
+    background: var(--bs-primary);
+    border: none;
+}
+
+/* Progress bar width utilities */
+.w-65 {
+    width: 65% !important;
+}
+
+.w-80 {
+    width: 80% !important;
+}
+
+/* Hero switcher for development */
+.hero-switcher {
+    margin-right: 0;
+}
+
+/* Animations */
+@keyframes floating {
+    0%, 100% { 
+        transform: translateY(0px); 
+    }
+    50% { 
+        transform: translateY(-20px); 
+    }
+}
+
+@keyframes spin {
+    0% { 
+        transform: rotate(0deg); 
+    }
+    100% { 
+        transform: rotate(360deg); 
+    }
+}
+
+@keyframes bounce {
+    0%, 100% { 
+        transform: translateY(0); 
+    }
+    50% { 
+        transform: translateY(-10px); 
+    }
+}
+
+@keyframes particleFloat {
+    0%, 100% { 
+        transform: translateY(0px) rotate(0deg);
+        opacity: 0.7;
+    }
+    50% { 
+        transform: translateY(-30px) rotate(180deg);
+        opacity: 1;
+    }
+}
+
+@keyframes ringFloat {
+    0%, 100% { 
+        transform: scale(1) rotate(0deg);
+        opacity: 0.3;
+    }
+    50% { 
+        transform: scale(1.1) rotate(180deg);
+        opacity: 0.6;
+    }
+}
+
+@keyframes pulse {
+    0% { 
+        transform: scale(1); 
+    }
+    50% { 
+        transform: scale(1.05); 
+    }
+    100% { 
+        transform: scale(1); 
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hero-logo-container {
+        width: 80px;
+        height: 80px;
+        font-size: 2rem;
+    }
+    
+    .floating-ring {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .particle {
+        width: 6px;
+        height: 6px;
+    }
+}
+
+/* Dark mode adjustments */
+[data-bs-theme="dark"] .hero-gradient-bg {
+    background: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-secondary) 50%, #7c2d92 100%);
+}
+
+[data-bs-theme="dark"] .particle {
+    background: var(--bs-secondary);
+}

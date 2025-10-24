@@ -1,0 +1,284 @@
+{% extends 'bases/private.html' %}
+
+{% block nav %}
+    {% include 'private/components/nav.html' %}
+    
+    <!-- Custom nav override to show active state for Create Mix -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mark Create Mix as active
+            const createMixLink = document.querySelector('a[href*="create_mix"]');
+            if (createMixLink) {
+                createMixLink.classList.add('side-nav__item--active');
+            }
+        });
+    </script>
+{% endblock nav %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages mb-4">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                                <i class="bi bi-{{ 'exclamation-circle' if category == 'error' else 'check-circle' if category == 'success' else 'info-circle' }} me-2"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <!-- Page Header -->
+            <div class="page-header mb-4">
+                <h1 class="page-title">
+                    <i class="bi bi-music-note-beamed me-3"></i>
+                    Create Mix
+                </h1>
+                <p class="page-subtitle text-muted">
+                    Create a new mix album or add songs to existing albums
+                </p>
+            </div>
+
+            <!-- Action Cards Container -->
+            <div class="row g-4">
+                <!-- Create New Mix Card -->
+                <div class="col-lg-6">
+                    <div class="action-card">
+                        <div class="action-card__icon">
+                            <i class="bi bi-plus-circle"></i>
+                        </div>
+                        <div class="action-card__content">
+                            <h3 class="action-card__title">Create New Mix</h3>
+                            <p class="action-card__description">
+                                Start a brand new music mix album. Set the title, description, 
+                                and begin building your collection of tracks.
+                            </p>
+                            <button class="btn btn-primary btn-lg action-card__button" data-bs-toggle="modal" data-bs-target="#createMixModal">
+                                <i class="bi bi-plus-lg me-2"></i>
+                                Create New Mix
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upload Song Card -->
+                <div class="col-lg-6">
+                    <div class="action-card">
+                        <div class="action-card__icon">
+                            <i class="bi bi-upload"></i>
+                        </div>
+                        <div class="action-card__content">
+                            <h3 class="action-card__title">Upload Song</h3>
+                            <p class="action-card__description">
+                                Add a new song to an existing mix album. Choose your file 
+                                and select which album to add it to.
+                            </p>
+                            <button class="btn btn-secondary btn-lg action-card__button" data-bs-toggle="modal" data-bs-target="#uploadSongModal">
+                                <i class="bi bi-cloud-arrow-up me-2"></i>
+                                Upload Song
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity Section -->
+            <div class="recent-activity mt-5">
+                <h2 class="section-title">
+                    <i class="bi bi-clock-history me-2"></i>
+                    Recent Activity
+                </h2>
+                <div class="activity-list">
+                    <div class="activity-item">
+                        <div class="activity-item__icon">
+                            <i class="bi bi-music-note"></i>
+                        </div>
+                        <div class="activity-item__content">
+                            <div class="activity-item__title">No recent activity</div>
+                            <div class="activity-item__subtitle">Start creating mixes to see your activity here</div>
+                        </div>
+                        <div class="activity-item__time">
+                            <span class="text-muted">Get started!</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create New Mix Modal -->
+<div class="modal fade" id="createMixModal" tabindex="-1" aria-labelledby="createMixModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createMixModalLabel">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    Create New Mix
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="createMixForm" method="POST" action="{{ url_for('music.create_mix') }}" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="create_mix">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <!-- Mix Title -->
+                        <div class="col-12">
+                            <label for="mixTitle" class="form-label">Mix Title *</label>
+                            <input type="text" class="form-control" id="mixTitle" name="mix_title" required 
+                                   placeholder="Enter a catchy title for your mix">
+                            <div class="form-text">Give your mix a memorable name that describes the mood or theme</div>
+                        </div>
+
+                        <!-- Mix Description -->
+                        <div class="col-12">
+                            <label for="mixDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="mixDescription" name="mix_description" rows="3" 
+                                      placeholder="Describe your mix, the mood, or the story behind it"></textarea>
+                            <div class="form-text">Help others understand what makes this mix special</div>
+                        </div>
+
+                        <!-- Genre -->
+                        <div class="col-md-6">
+                            <label for="mixGenre" class="form-label">Genre</label>
+                            <select class="form-select" id="mixGenre" name="mix_genre">
+                                <option value="">Select a genre</option>
+                                <option value="pop">Pop</option>
+                                <option value="rock">Rock</option>
+                                <option value="hip-hop">Hip-Hop</option>
+                                <option value="electronic">Electronic</option>
+                                <option value="classical">Classical</option>
+                                <option value="jazz">Jazz</option>
+                                <option value="country">Country</option>
+                                <option value="r&b">R&B</option>
+                                <option value="indie">Indie</option>
+                                <option value="alternative">Alternative</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <!-- Visibility -->
+                        <div class="col-md-6">
+                            <label for="mixVisibility" class="form-label">Visibility</label>
+                            <select class="form-select" id="mixVisibility" name="mix_visibility">
+                                <option value="private">Private (Only me)</option>
+                                <option value="class">Class Only</option>
+                                <option value="public">Public</option>
+                            </select>
+                        </div>
+
+                        <!-- Cover Image -->
+                        <div class="col-12">
+                            <label for="mixCover" class="form-label">Cover Image</label>
+                            <input type="file" class="form-control" id="mixCover" name="mix_cover" 
+                                   accept="image/jpeg,image/jpg,image/png,image/gif">
+                            <div class="form-text">Upload a cover image for your mix (optional)</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-plus-lg me-2"></i>
+                        Create Mix
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Song Modal -->
+<div class="modal fade" id="uploadSongModal" tabindex="-1" aria-labelledby="uploadSongModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadSongModalLabel">
+                    <i class="bi bi-cloud-arrow-up me-2"></i>
+                    Upload Song
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="uploadSongForm" method="POST" action="{{ url_for('music.upload_song') }}" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="upload_song">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <!-- Select Mix -->
+                        <div class="col-12">
+                            <label for="selectMix" class="form-label">Select Mix *</label>
+                            <select class="form-select" id="selectMix" name="mix_id" required>
+                                <option value="">Choose an existing mix</option>
+                                {% for mix in user_mixes %}
+                                <option value="{{ mix.id }}">{{ mix.title }}</option>
+                                {% endfor %}
+                                {% if not user_mixes %}
+                                <option disabled>No mixes available</option>
+                                {% endif %}
+                            </select>
+                            <div class="form-text">
+                                Don't see your mix? <a href="#" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#createMixModal">Create a new mix first</a>
+                            </div>
+                        </div>
+
+                        <!-- Song File -->
+                        <div class="col-12">
+                            <label for="songFile" class="form-label">Song File *</label>
+                            <input type="file" class="form-control" id="songFile" name="song_file" required
+                                   accept="audio/mp3,audio/wav,audio/ogg,audio/m4a">
+                            <div class="form-text">Supported formats: MP3, WAV, OGG, M4A (Max 50MB)</div>
+                        </div>
+
+                        <!-- Song Title -->
+                        <div class="col-md-6">
+                            <label for="songTitle" class="form-label">Song Title</label>
+                            <input type="text" class="form-control" id="songTitle" name="song_title" 
+                                   placeholder="Auto-detected from file">
+                            <div class="form-text">Leave blank to use filename</div>
+                        </div>
+
+                        <!-- Artist -->
+                        <div class="col-md-6">
+                            <label for="songArtist" class="form-label">Artist</label>
+                            <input type="text" class="form-control" id="songArtist" name="song_artist" 
+                                   placeholder="Artist name">
+                        </div>
+
+                        <!-- Track Number -->
+                        <div class="col-md-6">
+                            <label for="trackNumber" class="form-label">Track Number</label>
+                            <input type="number" class="form-control" id="trackNumber" name="track_number" 
+                                   min="1" placeholder="Auto-assigned">
+                            <div class="form-text">Leave blank to add at the end</div>
+                        </div>
+
+                        <!-- Duration (auto-filled) -->
+                        <div class="col-md-6">
+                            <label for="songDuration" class="form-label">Duration</label>
+                            <input type="text" class="form-control" id="songDuration" name="song_duration" 
+                                   readonly placeholder="Auto-detected">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-cloud-arrow-up me-2"></i>
+                        Upload Song
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/create_mix.css') }}">
+{% endblock css %}
+

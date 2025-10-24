@@ -1,0 +1,61 @@
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+import logging
+import os
+
+db = SQLAlchemy()
+
+def create_app(config=None):
+    app = Flask(__name__)
+    
+    # Configure the app
+    if config:
+        app.config.update(config)
+    else:
+        app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///app.db')
+        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
+        
+        # File upload configuration
+        app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads', 'songs')
+        app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size
+    
+    # Initialize extensions
+    init_db(app)
+    init_blueprint(app)
+    init_looger(app)
+    
+    return app
+
+def init_db(app):
+    """Initialize SQLAlchemy with the Flask app"""
+    db.init_app(app)
+    
+    with app.app_context():
+        # Import all models so SQLAlchemy knows about them
+        from src.models import User, Role, Mix, Song, MixLike, PlayHistory
+        db.create_all()
+
+def init_blueprint(app):
+    """Initialize and register blueprints"""
+    # Import and register your blueprints here
+    # Example:
+    from src.controllers.routes import main_bp
+    app.register_blueprint(main_bp)
+
+    from src.controllers.user_controller import user_bp
+    app.register_blueprint(user_bp, url_prefix='/user')
+    
+    from src.controllers.music_controller import music_bp
+    app.register_blueprint(music_bp)
+
+def init_looger(app):
+    """Initialize logging configuration"""
+    if not app.debug:
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+        )
+        
+        app.logger.setLevel(logging.INFO)
+        app.logger.info('Application startup')
