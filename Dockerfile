@@ -1,52 +1,36 @@
-# Use the official Python runtime as a parent image
+# Use Python 3.11 slim image as base
 FROM python:3.11-slim
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-ENV FLASK_APP=run.py
-ENV FLASK_ENV=production
-
-# Set work directory
+# Set working directory
 WORKDIR /app
 
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    FLASK_APP=run.py \
+    FLASK_ENV=production
+
 # Install system dependencies
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        gcc \
-        g++ \
-        libffi-dev \
-        libssl-dev \
-        curl \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements file
+# Copy requirements first for better caching
 COPY requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project
+# Copy application code
 COPY . .
 
 # Create necessary directories
-RUN mkdir -p src/static/uploads/songs \
-    && mkdir -p instance
+RUN mkdir -p instance logs
 
-# Test the application can start properly
-RUN python test_app.py
+# Expose port (CapRover will map this)
+EXPOSE 80
 
-# Create a non-root user to run the application
-RUN adduser --disabled-password --gecos '' appuser \
-    && chown -R appuser:appuser /app
-USER appuser
-
-# Expose port
-EXPOSE 3000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000/ || exit 1
-
-# Run the application with gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:3000", "--workers", "2", "--threads", "2", "--timeout", "120", "--access-logfile", "-", "--error-logfile", "-", "--log-level", "info", "--preload", "--env", "FLASK_ENV=production", "run:app"]
+# Run the application with Gunicorn
+# CapRover expects the app to run on port 80
+# Use preload to catch errors early and set config to production
+CMD ["gunicorn", "--bind", "0.0.0.0:80", "--workers", "2", "--threads", "2", "--timeout", "120", "--access-logfile", "-", "--error-logfile", "-", "--log-level", "info", "--preload", "--env", "FLASK_ENV=production", "run:app"]
