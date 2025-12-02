@@ -1,0 +1,4 @@
+# Ignore Flask instance folder
+instance/
+
+instances/*
