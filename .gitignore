@@ -1,7 +1,6 @@
-# Ignore Flask instance folder
-instance/
-
-instances/*
-
 .github
 .venv
+__pycache__/
+*.pyc
+.env
+instance
