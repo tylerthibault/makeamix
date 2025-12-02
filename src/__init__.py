@@ -1,81 +1,72 @@
-from flask import Flask
+from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
-import logging
-import os
+from flask_bcrypt import Bcrypt
 
+
+# Create global db instance
 db = SQLAlchemy()
+bcrypt = Bcrypt()
 
-def create_app(config=None):
+# create app
+def create_app():
     app = Flask(__name__)
+    app.config['SECRET_KEY'] = 'cd1e5049c9b4160cdf5a7d08'
+
+    # init db
+    init_db(app)
+
+    # init blueprints
+    init_blueprints(app)
+
+    # error handlers
+    error_handlers(app)
+
+    return app
     
-    try:
-        # Configure the app
-        if config:
-            app.config.update(config)
-        else:
-            app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///app.db')
-            app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-            app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
-            
-            # File upload configuration
-            app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads', 'songs')
-            app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size
-        
-        # Initialize extensions
-        init_db(app)
-        init_blueprint(app)
-        init_logger(app)
-        
-        return app
-    except Exception as e:
-        print(f"Error creating Flask app: {e}")
-        import traceback
-        traceback.print_exc()
-        raise
+    
 
+# init db
 def init_db(app):
-    """Initialize SQLAlchemy with the Flask app"""
-    try:
-        db.init_app(app)
-        
-        with app.app_context():
-            # Import all models so SQLAlchemy knows about them
-            from src.models import User, Role, Mix, Song, MixLike, PlayHistory
-            db.create_all()
-            print("Database initialized successfully")
-    except Exception as e:
-        print(f"Error initializing database: {e}")
-        import traceback
-        traceback.print_exc()
-        raise
+    """
+        initialize the sql alchemy sqlite database. Will create all the tables in the model files. 
+    """
+    
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///makeamix.db'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    db.init_app(app)
+    with app.app_context():
+        from src.models.user import User
+        from src.models.logbook import Logbook
+        from src.models.song import Song
+        db.create_all()
 
-def init_blueprint(app):
-    """Initialize and register blueprints"""
-    try:
-        # Import and register your blueprints here
-        from src.controllers.routes import main_bp
-        app.register_blueprint(main_bp)
 
-        from src.controllers.user_controller import user_bp
-        app.register_blueprint(user_bp, url_prefix='/user')
-        
-        from src.controllers.music_controller import music_bp
-        app.register_blueprint(music_bp)
-        
-        print("Blueprints registered successfully")
-    except Exception as e:
-        print(f"Error registering blueprints: {e}")
-        import traceback
-        traceback.print_exc()
-        raise
 
-def init_logger(app):
-    """Initialize logging configuration"""
-    if not app.debug:
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
-        )
-        
-        app.logger.setLevel(logging.INFO)
-        app.logger.info('Application startup')
+# init blueprints
+def init_blueprints(app):
+    """
+        initialize all blueprints for the application. 
+    """
+
+    from src.controllers.routes import main_bp
+    app.register_blueprint(main_bp)
+
+    from src.controllers.auth import auth_bp
+    app.register_blueprint(auth_bp)
+
+    from src.controllers.user import user_bp
+    app.register_blueprint(user_bp)
+
+    from src.controllers.song import song_bp
+    app.register_blueprint(song_bp)
+
+
+def error_handlers(app):
+    # Register 404 error handler
+    @app.errorhandler(404)
+    def page_not_found(e):
+        return render_template('errors/404.html'), 404
+    
+    @app.errorhandler(500)
+    def internal_server_error(e):
+        return render_template('errors/500.html'), 500

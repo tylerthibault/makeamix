@@ -1,68 +1,44 @@
-@import url('bootstrap_addons/fonts.css');
-@import url('bootstrap_addons/sizing.css');
-@import url('bootstrap_addons/buttons.css');
-@import url('bootstrap_addons/basic.css');
-@import url('bootstrap_addons/colors.css');
-@import url('components/cards.css');
-@import url('components/tables.css');
-@import url('components/hero.css');
-@import url('components/auth.css');
-@import url('components/sidenav.css');
-@import url('private/super_user_dashboard.css');
-
-/* Light mode (default) */
+/* Color Palette - CSS Variables for Light/Dark Mode */
 :root {
-    /* Subtle variations - barely perceptible */
-    --bs-primary: #1f4168;
-    --bs-secondary: #2b9c89;
-    --bs-success: #d1fae5;
-    --bs-info: #dbeafe;
-    --bs-warning: #fef3c7;
-    --bs-danger: #fee2e2;
-    --bs-light: #f9fafb;
-    --bs-dark: #111827;
-    
-    /* Backgrounds - Ultra clean */
-    --bg-primary: #ffffff;
-    --bg-secondary: #f9fafb;
-    --text-primary: #111827;
-    --text-secondary: #6b7280;
-    --border-color: #e5e7eb;
-    --link-color: #4f46e5;
-    
-    /* Gradients - Soft & Sophisticated */
-    --primary-gradient: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-secondary) 100%);
-    --secondary-gradient: linear-gradient(135deg, var(--bs-secondary) 0%, var(--bs-primary) 100%);
+  /* Primary Colors */
+  --color-bg-primary: #0a0a0a;
+  --color-bg-secondary: #111;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #888;
+  --color-text-tertiary: #555;
+  
+  /* Accent Color */
+  --color-accent: #00ff00;
+  
+  /* Border Colors */
+  --color-border-primary: #333;
+  --color-border-accent: var(--color-accent);
+  
+  /* Interactive States */
+  --color-hover: var(--color-accent);
+  --color-active: var(--color-accent);
 }
 
-/* Dark mode - Muted & sophisticated */
-[data-bs-theme="dark"] {
-    /* Subtle dark variations */
-    --bs-primary: #1e293b;
-    --bs-secondary: #374151;
-    --bs-success: #064e3b;
-    --bs-info: #0c4a6e;
-    --bs-warning: #78350f;
-    --bs-danger: #7f1d1d;
-    --bs-light: #1f2937;
-    --bs-dark: #f3f4f6;
-    
-    /* Dark backgrounds */
-    --bg-primary: #0f172a;
-    --bg-secondary: #1e293b;
-    --text-primary: #6b8dd1;
-    --text-secondary: #9ca3af;
-    --border-color: #374151;
-    --link-color: #818cf8;
-    
-    /* Dark Gradients - Deep & Rich */
-    --primary-gradient: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-secondary) 100%);
-    --secondary-gradient: linear-gradient(135deg, var(--bs-secondary) 0%, var(--bs-primary) 100%);
+/* Light Mode Variables (to be implemented) */
+[data-theme="light"] {
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f5f5f5;
+  --color-text-primary: #0a0a0a;
+  --color-text-secondary: #666;
+  --color-text-tertiary: #999;
+  --color-border-primary: #e0e0e0;
 }
 
-/* Body theme support */
+/* Global Resets */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
-    transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: 'Arial', sans-serif;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  min-height: 100vh;
 }

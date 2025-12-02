@@ -1,0 +1,35 @@
+{% extends 'bases/public.html' %}
+
+{% block content %}
+<div class="page-centered">
+    <div class="decoration">L</div>
+
+    <div class="container">
+        <div class="header">
+            <h1>Login</h1>
+            <p class="tagline">Welcome Back</p>
+        </div>
+
+        <div class="form-container">
+            <form method="POST" action="{{ url_for('auth.login') }}">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required placeholder="Enter your username">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required placeholder="Enter your password">
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Sign In</button>
+            </form>
+
+            <div class="form-footer">
+                Don't have an account? 
+                <a href="{{ url_for('auth.register') }}" class="text-link">Create one</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

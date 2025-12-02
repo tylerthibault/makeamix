@@ -1,0 +1,15 @@
+{% extends 'bases/public.html' %}
+
+{% block content %}
+<div class="page-centered">
+    <div class="error-container">
+        <div class="error-code">404</div>
+        <h1 class="header">Page Not Found</h1>
+        <p class="tagline">The page you're looking for doesn't exist or has been moved.</p>
+        <div class="actions">
+            <a href="{{ url_for('main.home') }}" class="btn">Go Home</a>
+            <a href="{{ url_for('main.about') }}" class="btn">Learn About Us</a>
+        </div>
+    </div>
+</div>
+{% endblock content %}

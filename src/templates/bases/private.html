@@ -1,29 +1,24 @@
 {% extends 'bases/public.html' %}
 
+{% block styles %}
+<style>
+    .main-content {
+        margin-top: 5em !important;
+    }
+</style>
+{% endblock styles %}
+
 {% block page_wrapper %}
-
-<!-- Mobile Navigation Toggle -->
-<button class="mobile-nav-toggle d-md-none" id="mobileNavToggle">
-    <i class="bi bi-list"></i>
-</button>
-
-<!-- Side Navigation Overlay for Mobile -->
-<div class="side-nav-overlay" id="sideNavOverlay"></div>
-
 {% block nav %}
+<div class="">
     {% include 'private/components/nav.html' %}
+</div>
 {% endblock nav %}
 
-<!-- Main Content Area -->
-<main class="main-content--with-sidenav ps-3 pt-3">
+<main class="main-content">
     {% block content %}
     
     {% endblock content %}
 </main>
 
 {% endblock page_wrapper %}
-
-{% block js %}
-{{ super() }}
-<script src="{{ url_for('static', filename='js/components/sidenav.js') }}"></script>
-{% endblock js %}

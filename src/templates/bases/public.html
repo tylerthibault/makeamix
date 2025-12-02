@@ -1,44 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Make a Mix</title>
+    <title>Document</title>
 
-    {% block head %}
-        
-    {% endblock head %}
+    <!-- bootstrap -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap/bootstrap.min.css') }}">
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrapcss/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- custom css -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    {% block css %}
-        
-    {% endblock css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+    {% block styles %}
+
+    {% endblock styles %}
 </head>
-<body class="d-flex flex-column min-vh-100">
+
+<body>
+
+    <!-- flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <hr>
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}" role="alert">
+        {{ message }}
+    </div>
+    {% endfor %}
+    <hr>
+    {% endif %}
+    {% endwith %}
+
     {% block page_wrapper %}
-        
+
+    <nav>
         {% block nav %}
-            {% include 'public/components/nav.html' %}
+
         {% endblock nav %}
+    </nav>
 
-        <main class="flex-grow-1">
-            {% block content %}
-                
-            {% endblock content %}
-        </main>
+    <main>
+        {% block content %}
 
+        {% endblock content %}
+    </main>
+
+    <footer>
         {% block footer %}
-            {% include 'public/components/footer.html' %}
+
         {% endblock footer %}
+    </footer>
 
     {% endblock page_wrapper %}
 
 
-    <script src="{{ url_for('static', filename='js/bootstrapjs/bootstrap.bundle.min.js') }}"></script>
-    {% block js %}
-        
-    {% endblock js %}
+    {% block scripts %}
+
+    {% endblock scripts %}
 </body>
+
 </html>

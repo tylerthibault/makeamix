@@ -1,0 +1,307 @@
+{% extends 'bases/public.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="header">
+        <h1>{{ song.title }}</h1>
+        <p class="tagline">Uploaded {{ song.created_at.strftime('%B %d, %Y at %H:%M') }}</p>
+    </div>
+
+    <div class="content-section">
+        <h2>Audio Player</h2>
+        
+        {% if song.lyrics %}
+        <div class="player-tabs">
+            <button class="player-tab active" data-tab="visualizer">Visualizer</button>
+            <button class="player-tab" data-tab="lyrics">Lyrics</button>
+        </div>
+        {% endif %}
+        
+        <div class="audio-player-full">
+            <div id="visualizer-view" class="player-view active">
+                <canvas id="visualizer" width="800" height="200"></canvas>
+            </div>
+            
+            {% if song.lyrics %}
+            <div id="lyrics-view" class="player-view lyrics-display">
+                <div class="lyrics-content" id="lyrics-content">
+                    {% for line in song.lyrics.split('\n') %}
+                        {% set is_time_tag = line.strip().startswith('[time=') and line.strip().endswith(']') %}
+                        {% set is_section_tag = line.strip().startswith('[') and line.strip().endswith(']') and not is_time_tag %}
+                        
+                        {% if is_time_tag %}
+                            {# Time markers are hidden but processed by JavaScript #}
+                        {% elif is_section_tag %}
+                            <div class="lyrics-tag">{{ line.strip() }}</div>
+                        {% elif line.strip() %}
+                            <div class="lyrics-line" data-index="{{ loop.index0 }}">{{ line }}</div>
+                        {% else %}
+                            <div class="lyrics-spacer"></div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <audio id="full-audio-player" controls>
+                <source src="data:audio/mpeg;base64,{{ song.content }}" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const audio = document.getElementById('full-audio-player');
+    const canvas = document.getElementById('visualizer');
+    const ctx = canvas ? canvas.getContext('2d') : null;
+    
+    let audioContext;
+    let analyser;
+    let dataArray;
+    let bufferLength;
+    let animationId;
+
+    // Tab switching
+    const playerTabs = document.querySelectorAll('.player-tab');
+    const playerViews = document.querySelectorAll('.player-view');
+    
+    playerTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetTab = tab.dataset.tab;
+            
+            // Update tabs
+            playerTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            // Update views
+            playerViews.forEach(view => view.classList.remove('active'));
+            document.getElementById(`${targetTab}-view`).classList.add('active');
+        });
+    });
+
+    // Initialize audio context when user interacts with audio
+    audio.addEventListener('play', () => {
+        if (!audioContext && ctx) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            const source = audioContext.createMediaElementSource(audio);
+            source.connect(analyser);
+            analyser.connect(audioContext.destination);
+            
+            analyser.fftSize = 256;
+            bufferLength = analyser.frequencyBinCount;
+            dataArray = new Uint8Array(bufferLength);
+        }
+        
+        if (audioContext && audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+        
+        if (ctx) {
+            visualize();
+        }
+    });
+
+    audio.addEventListener('pause', () => {
+        if (animationId) {
+            cancelAnimationFrame(animationId);
+        }
+    });
+
+    function visualize() {
+        animationId = requestAnimationFrame(visualize);
+        
+        analyser.getByteFrequencyData(dataArray);
+        
+        // Clear canvas
+        ctx.fillStyle = 'rgb(17, 17, 17)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        const barWidth = (canvas.width / bufferLength) * 2.5;
+        let barHeight;
+        let x = 0;
+        
+        for (let i = 0; i < bufferLength; i++) {
+            barHeight = (dataArray[i] / 255) * canvas.height * 0.8;
+            
+            // Create gradient from bottom to top
+            const gradient = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - barHeight);
+            gradient.addColorStop(0, '#00ff00');
+            gradient.addColorStop(0.5, '#00cc00');
+            gradient.addColorStop(1, '#009900');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(x, canvas.height - barHeight, barWidth - 2, barHeight);
+            
+            x += barWidth;
+        }
+    }
+
+    // Handle canvas resize
+    function resizeCanvas() {
+        if (canvas) {
+            const container = canvas.parentElement.parentElement;
+            const rect = container.getBoundingClientRect();
+            canvas.width = rect.width - 80;
+            canvas.height = 200;
+        }
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // Lyrics synchronization with timestamp support
+    const lyricsLines = document.querySelectorAll('.lyrics-line');
+    const lyricsContent = document.getElementById('lyrics-content');
+    
+    if (lyricsLines.length > 0) {
+        const totalLines = lyricsLines.length;
+        let currentActiveIndex = -1;
+        
+        // Parse lyrics to extract timestamp sync points
+        const rawLyrics = `{{ song.lyrics|safe }}`.split('\n');
+        const syncPoints = []; // Array of {lineIndex, timestamp}
+        let lyricsLineIndex = 0;
+        let nextTimestamp = null;
+        
+        // Build sync points - these are realignment markers
+        rawLyrics.forEach(line => {
+            const trimmed = line.trim();
+            const timeMatch = trimmed.match(/^\[time=(\d+):(\d+)\]$/);
+            
+            if (timeMatch) {
+                // Convert time to seconds
+                const minutes = parseInt(timeMatch[1]);
+                const seconds = parseInt(timeMatch[2]);
+                nextTimestamp = minutes * 60 + seconds;
+            } else if (!trimmed.startsWith('[') && trimmed) {
+                // This is an actual lyrics line
+                if (nextTimestamp !== null) {
+                    syncPoints.push({ lineIndex: lyricsLineIndex, timestamp: nextTimestamp });
+                    nextTimestamp = null;
+                }
+                lyricsLineIndex++;
+            }
+        });
+        
+        // Check if we have any sync points
+        const hasSyncPoints = syncPoints.length > 0;
+        
+        audio.addEventListener('timeupdate', () => {
+            const currentTime = audio.currentTime;
+            const duration = audio.duration;
+            
+            let targetLineIndex = -1;
+            
+            if (duration) {
+                if (hasSyncPoints) {
+                    // Use sync points to realign automatic progression
+                    // Find the most recent sync point that has been passed
+                    let activeSyncPoint = null;
+                    let nextSyncPoint = null;
+                    
+                    for (let i = 0; i < syncPoints.length; i++) {
+                        if (currentTime >= syncPoints[i].timestamp) {
+                            activeSyncPoint = syncPoints[i];
+                            nextSyncPoint = syncPoints[i + 1] || null;
+                        } else {
+                            nextSyncPoint = syncPoints[i];
+                            break;
+                        }
+                    }
+                    
+                    if (activeSyncPoint) {
+                        // Calculate progress between sync points
+                        const startLine = activeSyncPoint.lineIndex;
+                        const startTime = activeSyncPoint.timestamp;
+                        
+                        let endLine, endTime;
+                        if (nextSyncPoint) {
+                            endLine = nextSyncPoint.lineIndex;
+                            endTime = nextSyncPoint.timestamp;
+                        } else {
+                            // No next sync point, use end of song
+                            endLine = totalLines - 1;
+                            endTime = duration * 0.95;
+                        }
+                        
+                        // Calculate which line we should be on based on time between sync points
+                        const timeSinceSync = currentTime - startTime;
+                        const timeToNextSync = endTime - startTime;
+                        const linesToNextSync = endLine - startLine;
+                        
+                        if (timeToNextSync > 0 && linesToNextSync > 0) {
+                            const progressBetweenSyncs = timeSinceSync / timeToNextSync;
+                            const lineOffset = Math.floor(progressBetweenSyncs * linesToNextSync);
+                            targetLineIndex = Math.min(startLine + lineOffset, endLine);
+                        } else {
+                            targetLineIndex = startLine;
+                        }
+                    } else if (nextSyncPoint) {
+                        // Before first sync point - use automatic timing to that point
+                        const progressToFirstSync = currentTime / nextSyncPoint.timestamp;
+                        targetLineIndex = Math.floor(progressToFirstSync * nextSyncPoint.lineIndex);
+                    } else {
+                        // No sync points apply, shouldn't happen but fallback
+                        targetLineIndex = 0;
+                    }
+                } else {
+                    // No sync points, use pure automatic timing
+                    const lyricsStartBuffer = duration * 0;
+                    const lyricsEndBuffer = duration * 0.05;
+                    const effectiveDuration = duration - lyricsStartBuffer - lyricsEndBuffer;
+                    const effectiveTime = Math.max(0, currentTime - lyricsStartBuffer);
+                    
+                    const progressPercent = effectiveTime / effectiveDuration;
+                    targetLineIndex = Math.min(
+                        Math.floor(progressPercent * totalLines), 
+                        totalLines - 1
+                    );
+                }
+            }
+            
+            // Only update if we're moving to a new line (prevents flickering)
+            if (targetLineIndex !== currentActiveIndex) {
+                currentActiveIndex = targetLineIndex;
+                
+                lyricsLines.forEach((line, index) => {
+                    line.classList.remove('active', 'passed');
+                    
+                    if (index === currentActiveIndex && currentActiveIndex >= 0) {
+                        line.classList.add('active');
+                        
+                        // Auto-scroll to active line
+                        if (lyricsContent) {
+                            const lineTop = line.offsetTop;
+                            const containerHeight = lyricsContent.parentElement.clientHeight;
+                            const scrollPosition = lineTop - (containerHeight / 2) + (line.clientHeight / 2);
+                            lyricsContent.parentElement.scrollTo({
+                                top: scrollPosition,
+                                behavior: 'smooth'
+                            });
+                        }
+                    } else if (index < currentActiveIndex) {
+                        line.classList.add('passed');
+                    }
+                });
+            }
+        });
+        
+        // Reset on audio end
+        audio.addEventListener('ended', () => {
+            lyricsLines.forEach(line => {
+                line.classList.remove('active', 'passed');
+            });
+        });
+        
+        // Reset on seek
+        audio.addEventListener('seeked', () => {
+            // Trigger timeupdate manually after seek
+            audio.dispatchEvent(new Event('timeupdate'));
+        });
+    }
+});
+</script>
+{% endblock content %}

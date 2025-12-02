@@ -1,0 +1,13 @@
+{% macro modal(id, title, size='md') %}
+<div class="modal-overlay" id="{{ id }}-overlay">
+    <div class="modal-container modal-{{ size }}">
+        <div class="modal-header">
+            <h2 class="modal-title">{{ title }}</h2>
+            <button class="modal-close" data-modal="{{ id }}">&times;</button>
+        </div>
+        <div class="modal-body">
+            {{ caller() }}
+        </div>
+    </div>
+</div>
+{% endmacro %}
