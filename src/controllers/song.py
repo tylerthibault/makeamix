@@ -1,7 +1,8 @@
 import datetime
-from flask import Blueprint, abort, render_template, request, redirect, url_for, session
+from flask import Blueprint, abort, render_template, request, redirect, url_for, session, send_file
 from src.models.song import Song
 from src.services.user_service import UserService
+from src.services.file_service import FileService
 
 song_bp = Blueprint('songs', __name__, url_prefix='/songs')
 
@@ -57,7 +58,25 @@ def delete_song(song_id):
     song = Song.query.get(song_id)
     if not song:
         return "Song not found", 404
-    from src import db
-    db.session.delete(song)
-    db.session.commit()
+    Song.delete(song_id)
     return redirect(url_for('user.home'))
+
+# SERVE AUDIO FILE
+@song_bp.route('/audio/<int:song_id>')
+def serve_audio(song_id):
+    song = Song.query.get(song_id)
+    if not song:
+        abort(404)
+    
+    # Check permissions - public songs or owner can access
+    current_user = UserService.get_current_user(session.get('user_token'))
+    if not song.is_public:
+        if not current_user or song.user_id != current_user.id:
+            abort(403)
+    
+    # Get file path and serve
+    file_path = FileService.get_file_path(song.file_path)
+    if not file_path or not file_path.exists():
+        abort(404)
+    
+    return send_file(file_path, mimetype='audio/mpeg')

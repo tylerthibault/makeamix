@@ -34,7 +34,7 @@
                                 <button class="play-pause-btn" data-song-id="{{ song.id }}"></button>
                                 <span class="audio-time">0:00</span>
                                 <audio id="audio-{{ song.id }}">
-                                    <source src="data:audio/mpeg;base64,{{ song.content }}" type="audio/mpeg">
+                                    <source src="{{ url_for('songs.serve_audio', song_id=song.id) }}" type="audio/mpeg">
                                 </audio>
                             </div>
                         </td>

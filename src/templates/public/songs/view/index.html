@@ -3,8 +3,22 @@
 {% block content %}
 <div class="container">
     <div class="header">
-        <h1>{{ song.title }}</h1>
-        <p class="tagline">Uploaded {{ song.created_at.strftime('%B %d, %Y at %H:%M') }}</p>
+        <div class="header-content">
+            <div>
+                <h1>{{ song.title }}</h1>
+                <p class="tagline">Uploaded {{ song.created_at.strftime('%B %d, %Y at %H:%M') }}</p>
+            </div>
+            <button id="share-btn" class="btn btn-secondary" title="Share this song">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="18" cy="5" r="3"></circle>
+                    <circle cx="6" cy="12" r="3"></circle>
+                    <circle cx="18" cy="19" r="3"></circle>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                </svg>
+                Share
+            </button>
+        </div>
     </div>
 
     <div class="content-section">
@@ -44,14 +58,92 @@
             {% endif %}
             
             <audio id="full-audio-player" controls>
-                <source src="data:audio/mpeg;base64,{{ song.content }}" type="audio/mpeg">
+                <source src="{{ url_for('songs.serve_audio', song_id=song.id) }}" type="audio/mpeg">
                 Your browser does not support the audio element.
             </audio>
         </div>
     </div>
 </div>
 
+<!-- Share Modal -->
+<div id="share-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Share Song</h2>
+            <button class="modal-close" id="close-share-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="share-section">
+                <h3>QR Code</h3>
+                <div id="qr-code" class="qr-code-container"></div>
+                <p class="form-help-text">Scan this QR code to share the song</p>
+            </div>
+            
+            <div class="share-section">
+                <h3>Share Link</h3>
+                <div class="share-link-container">
+                    <input type="text" id="share-link" readonly value="{{ request.url }}">
+                    <button id="copy-link-btn" class="btn btn-primary">Copy</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
+// Share functionality
+const shareBtn = document.getElementById('share-btn');
+const shareModal = document.getElementById('share-modal');
+const closeShareModal = document.getElementById('close-share-modal');
+const copyLinkBtn = document.getElementById('copy-link-btn');
+const shareLinkInput = document.getElementById('share-link');
+let qrCodeGenerated = false;
+
+shareBtn.addEventListener('click', () => {
+    shareModal.style.display = 'flex';
+    
+    // Generate QR code only once
+    if (!qrCodeGenerated) {
+        const qrContainer = document.getElementById('qr-code');
+        qrContainer.innerHTML = ''; // Clear any existing content
+        new QRCode(qrContainer, {
+            text: window.location.href,
+            width: 256,
+            height: 256,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H
+        });
+        qrCodeGenerated = true;
+    }
+});
+
+closeShareModal.addEventListener('click', () => {
+    shareModal.style.display = 'none';
+});
+
+// Close modal when clicking outside
+shareModal.addEventListener('click', (e) => {
+    if (e.target === shareModal) {
+        shareModal.style.display = 'none';
+    }
+});
+
+copyLinkBtn.addEventListener('click', () => {
+    shareLinkInput.select();
+    document.execCommand('copy');
+    
+    const originalText = copyLinkBtn.textContent;
+    copyLinkBtn.textContent = 'Copied!';
+    copyLinkBtn.classList.add('btn-success');
+    
+    setTimeout(() => {
+        copyLinkBtn.textContent = originalText;
+        copyLinkBtn.classList.remove('btn-success');
+    }, 2000);
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     const audio = document.getElementById('full-audio-player');
     const canvas = document.getElementById('visualizer');
