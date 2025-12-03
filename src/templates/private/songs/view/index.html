@@ -8,16 +8,25 @@
                 <h1>{{ song.title }}</h1>
                 <p class="tagline">Uploaded {{ song.created_at.strftime('%B %d, %Y at %H:%M') }}</p>
             </div>
-            <button id="share-btn" class="btn btn-secondary" title="Share this song">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="18" cy="5" r="3"></circle>
-                    <circle cx="6" cy="12" r="3"></circle>
-                    <circle cx="18" cy="19" r="3"></circle>
-                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                </svg>
-                Share
-            </button>
+            <div style="display: flex; gap: 0.5rem;">
+                <button onclick="addToQueue()" class="btn btn-primary" title="Add to queue">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Add to Queue
+                </button>
+                <button id="share-btn" class="btn btn-secondary" title="Share this song">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="18" cy="5" r="3"></circle>
+                        <circle cx="6" cy="12" r="3"></circle>
+                        <circle cx="18" cy="19" r="3"></circle>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                    </svg>
+                    Share
+                </button>
+            </div>
         </div>
     </div>
 
@@ -492,6 +501,44 @@ document.addEventListener('DOMContentLoaded', () => {
             audio.dispatchEvent(new Event('timeupdate'));
         });
     }
+
+    // Queue Integration - Auto-play next song and set current song
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('fromQueue') === 'true' && window.queueManager) {
+        queueManager.setCurrentSongById({{ song.id }});
+    }
+    
+    // Combined ended event listener for lyrics reset + queue auto-play
+    if (audio) {
+        audio.addEventListener('ended', () => {
+            // Check for next song in queue
+            if (window.queueManager) {
+                const nextSong = queueManager.getNextSong();
+                if (nextSong) {
+                    console.log('Auto-playing next song in queue:', nextSong.title);
+                    // Auto-play next song in queue
+                    setTimeout(() => {
+                        queueManager.playNext();
+                    }, 1000);
+                }
+            }
+        });
+    }
+
+    // Add current song to queue button
+    window.addToQueue = function() {
+        console.log('Add to Queue clicked');
+        if (!window.queueManager) {
+            alert('Queue system not loaded. Please refresh the page.');
+            return;
+        }
+        queueManager.addSong({
+            id: {{ song.id }},
+            title: {{ song.title|tojson }},
+            url: "{{ url_for('songs.view_song', song_id=song.id) }}"
+        });
+        alert('Song added to queue!');
+    };
 });
 </script>
 {% endblock content %}

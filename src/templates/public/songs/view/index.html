@@ -395,6 +395,29 @@ document.addEventListener('DOMContentLoaded', () => {
             audio.dispatchEvent(new Event('timeupdate'));
         });
     }
+
+    // Queue Integration - Auto-play next song and set current song
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('fromQueue') === 'true' && window.queueManager) {
+        queueManager.setCurrentSongById({{ song.id }});
+    }
+    
+    // Combined ended event listener for lyrics reset + queue auto-play
+    if (audio) {
+        audio.addEventListener('ended', () => {
+            // Check for next song in queue
+            if (window.queueManager) {
+                const nextSong = queueManager.getNextSong();
+                if (nextSong) {
+                    console.log('Auto-playing next song in queue:', nextSong.title);
+                    // Auto-play next song in queue
+                    setTimeout(() => {
+                        queueManager.playNext();
+                    }, 1000);
+                }
+            }
+        });
+    }
 });
 </script>
 {% endblock content %}

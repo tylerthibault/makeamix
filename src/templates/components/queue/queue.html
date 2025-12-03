@@ -1,0 +1,355 @@
+<!-- Global Audio Player (Hidden) -->
+<audio id="global-audio-player" style="display: none;">
+    <source id="global-audio-source" src="" type="audio/mpeg">
+</audio>
+
+<!-- Queue Panel -->
+<div id="queue-panel" class="queue-panel">
+    <div class="queue-header">
+        <h3>Queue</h3>
+        <div class="queue-header-actions">
+            <span id="queue-count" class="queue-count">0 songs</span>
+            <button id="clear-queue-btn" class="btn-icon" title="Clear queue">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+            </button>
+            <button id="close-queue-btn" class="btn-icon" title="Close queue">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Mini Player in Queue -->
+    <div class="queue-mini-player" id="queue-mini-player" style="display: none;">
+        <div class="mini-player-info">
+            <div class="mini-player-title" id="mini-player-title">No song playing</div>
+            <div class="mini-player-time">
+                <span id="mini-player-current">0:00</span> / <span id="mini-player-duration">0:00</span>
+            </div>
+        </div>
+        <div class="mini-player-controls">
+            <button class="btn-icon" id="mini-player-prev" title="Previous">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="11 19 2 12 11 5 11 19"></polygon>
+                    <polygon points="22 19 13 12 22 5 22 19"></polygon>
+                </svg>
+            </button>
+            <button class="btn-icon" id="mini-player-play-pause" title="Play/Pause">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" id="mini-play-icon">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" id="mini-pause-icon" style="display: none;">
+                    <rect x="6" y="4" width="4" height="16"></rect>
+                    <rect x="14" y="4" width="4" height="16"></rect>
+                </svg>
+            </button>
+            <button class="btn-icon" id="mini-player-next" title="Next">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="13 19 22 12 13 5 13 19"></polygon>
+                    <polygon points="2 19 11 12 2 5 2 19"></polygon>
+                </svg>
+            </button>
+        </div>
+        <div class="mini-player-progress">
+            <input type="range" id="mini-player-progress-bar" min="0" max="100" value="0" step="0.1">
+        </div>
+    </div>
+    
+    <div class="queue-body" id="queue-body">
+        <div class="queue-empty">
+            No songs in queue. Add songs to start playing!
+        </div>
+    </div>
+</div>
+
+<!-- Queue Toggle Button (Fixed position) -->
+<button id="queue-toggle-btn" class="queue-toggle-btn" title="Toggle queue" onclick="document.getElementById('queue-panel').classList.toggle('active')">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="8" y1="6" x2="21" y2="6"></line>
+        <line x1="8" y1="12" x2="21" y2="12"></line>
+        <line x1="8" y1="18" x2="21" y2="18"></line>
+        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+    </svg>
+    <span class="queue-badge d-none" id="queue-badge" style="display: none;">0</span>
+</button>
+
+<script src="{{ url_for('static', filename='js/queue.js') }}"></script>
+<script>
+// Initialize queue UI when DOM is ready
+function initializeQueueUI() {
+    const queuePanel = document.getElementById('queue-panel');
+    const queueToggleBtn = document.getElementById('queue-toggle-btn');
+    const closeQueueBtn = document.getElementById('close-queue-btn');
+    const clearQueueBtn = document.getElementById('clear-queue-btn');
+    const queueBody = document.getElementById('queue-body');
+    const queueCount = document.getElementById('queue-count');
+    const queueBadge = document.getElementById('queue-badge');
+
+    if (!queuePanel || !queueToggleBtn) {
+        console.error('Queue elements not found', {queuePanel, queueToggleBtn});
+        return;
+    }
+
+    console.log('Queue UI initialized successfully');
+
+    // Close button handler
+    if (closeQueueBtn) {
+        closeQueueBtn.addEventListener('click', () => {
+            queuePanel.classList.remove('active');
+        });
+    }
+
+    // Close queue when clicking outside of it
+    document.addEventListener('click', (e) => {
+        const isClickInsideQueue = queuePanel.contains(e.target);
+        const isClickOnToggleBtn = queueToggleBtn.contains(e.target);
+        
+        if (!isClickInsideQueue && !isClickOnToggleBtn && queuePanel.classList.contains('active')) {
+            queuePanel.classList.remove('active');
+        }
+    });
+
+    // Clear queue
+    clearQueueBtn.addEventListener('click', () => {
+        if (window.queueManager && confirm('Clear entire queue?')) {
+            queueManager.clearQueue();
+        }
+    });
+
+    // Render queue UI
+    function renderQueue() {
+        if (!window.queueManager) {
+            console.error('queueManager not initialized');
+            return;
+        }
+        const queue = queueManager.getQueue();
+        const currentIndex = queueManager.currentIndex;
+        const length = queue.length;
+
+        // Update count displays
+        queueCount.textContent = `${length} song${length !== 1 ? 's' : ''}`;
+        queueBadge.textContent = length;
+        queueBadge.style.display = length > 0 ? 'flex' : 'none';
+
+        // Render queue items
+        if (length === 0) {
+            queueBody.innerHTML = '<div class="queue-empty">No songs in queue. Add songs to start playing!</div>';
+            return;
+        }
+
+        queueBody.innerHTML = queue.map((song, index) => `
+            <div class="queue-item ${index === currentIndex ? 'active' : ''}" data-index="${index}">
+                <div class="queue-item-info">
+                    <span class="queue-item-title">${song.title}</span>
+                </div>
+                <div class="queue-item-actions">
+                    ${index === currentIndex ? '<span class="now-playing-indicator">♪</span>' : ''}
+                    <button class="btn-icon queue-item-play" data-index="${index}" title="Play">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                    </button>
+                    <button class="btn-icon queue-item-remove" data-index="${index}" title="Remove">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+
+        // Add event listeners to queue items
+        document.querySelectorAll('.queue-item-play').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const index = parseInt(btn.dataset.index);
+                queueManager.playSongAtIndex(index);
+            });
+        });
+
+        document.querySelectorAll('.queue-item-remove').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const index = parseInt(btn.dataset.index);
+                queueManager.removeSong(index);
+            });
+        });
+
+        // Click on queue item to play
+        document.querySelectorAll('.queue-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const index = parseInt(item.dataset.index);
+                queueManager.playSongAtIndex(index);
+            });
+        });
+    }
+
+    // Listen for queue updates
+    window.addEventListener('queueUpdated', renderQueue);
+
+    // Initial render
+    renderQueue();
+    
+    // Mini Player Controls
+    const globalAudio = document.getElementById('global-audio-player');
+    const miniPlayer = document.getElementById('queue-mini-player');
+    const miniPlayerTitle = document.getElementById('mini-player-title');
+    const miniPlayerCurrent = document.getElementById('mini-player-current');
+    const miniPlayerDuration = document.getElementById('mini-player-duration');
+    const miniPlayerProgressBar = document.getElementById('mini-player-progress-bar');
+    const miniPlayerPlayPause = document.getElementById('mini-player-play-pause');
+    const miniPlayIcon = document.getElementById('mini-play-icon');
+    const miniPauseIcon = document.getElementById('mini-pause-icon');
+    const miniPlayerPrev = document.getElementById('mini-player-prev');
+    const miniPlayerNext = document.getElementById('mini-player-next');
+    
+    console.log('Mini player elements:', {
+        globalAudio, miniPlayer, miniPlayerPlayPause, miniPlayIcon, miniPauseIcon
+    });
+    
+    if (globalAudio && miniPlayerPlayPause) {
+        // Restore playback state on page load
+        const currentSong = queueManager.getCurrentSong();
+        if (currentSong) {
+            const playbackState = queueManager.getPlaybackState();
+            
+            console.log('Restoring playback state:', playbackState);
+            
+            const globalSource = document.getElementById('global-audio-source');
+            globalSource.src = `/songs/audio/${currentSong.id}`;
+            globalAudio.load();
+            
+            if (playbackState) {
+                globalAudio.currentTime = playbackState.currentTime;
+                
+                if (playbackState.isPlaying) {
+                    globalAudio.play()
+                        .then(() => console.log('Resumed playback from', playbackState.currentTime))
+                        .catch(err => console.log('Auto-play blocked by browser:', err));
+                }
+                
+                // Clear the state after restoring
+                queueManager.clearPlaybackState();
+            }
+            
+            // Show mini player and update title
+            miniPlayer.style.display = 'block';
+            miniPlayerTitle.textContent = currentSong.title;
+            
+            if (!globalAudio.paused) {
+                miniPlayIcon.style.display = 'none';
+                miniPauseIcon.style.display = 'block';
+            }
+        }
+        
+        // Update mini player when audio plays
+        globalAudio.addEventListener('play', () => {
+            miniPlayer.style.display = 'block';
+            miniPlayIcon.style.display = 'none';
+            miniPauseIcon.style.display = 'block';
+            
+            const currentSong = queueManager.getCurrentSong();
+            if (currentSong) {
+                miniPlayerTitle.textContent = currentSong.title;
+            }
+        });
+        
+        globalAudio.addEventListener('pause', () => {
+            miniPlayIcon.style.display = 'block';
+            miniPauseIcon.style.display = 'none';
+        });
+        
+        // Update time display
+        globalAudio.addEventListener('timeupdate', () => {
+            const current = globalAudio.currentTime;
+            const duration = globalAudio.duration;
+            
+            miniPlayerCurrent.textContent = formatTime(current);
+            miniPlayerDuration.textContent = formatTime(duration);
+            
+            if (duration) {
+                miniPlayerProgressBar.value = (current / duration) * 100;
+            }
+        });
+        
+        // Auto-play next song
+        globalAudio.addEventListener('ended', () => {
+            if (queueManager.getNextSong()) {
+                queueManager.playNext();
+            }
+        });
+        
+        // Play/Pause button
+        miniPlayerPlayPause.addEventListener('click', (e) => {
+            e.stopPropagation();
+            console.log('Play/Pause clicked, paused state:', globalAudio.paused);
+            if (globalAudio.paused) {
+                globalAudio.play()
+                    .then(() => console.log('Resumed playback'))
+                    .catch(err => console.error('Resume failed:', err));
+            } else {
+                globalAudio.pause();
+                console.log('Paused playback');
+            }
+        });
+        
+        // Previous button
+        miniPlayerPrev.addEventListener('click', () => {
+            if (queueManager.getPreviousSong()) {
+                queueManager.playPrevious();
+            }
+        });
+        
+        // Next button
+        miniPlayerNext.addEventListener('click', () => {
+            if (queueManager.getNextSong()) {
+                queueManager.playNext();
+            }
+        });
+        
+        // Progress bar seek
+        miniPlayerProgressBar.addEventListener('input', (e) => {
+            const duration = globalAudio.duration;
+            if (duration) {
+                globalAudio.currentTime = (e.target.value / 100) * duration;
+            }
+        });
+    }
+    
+    // Helper function to format time
+    function formatTime(seconds) {
+        if (isNaN(seconds)) return '0:00';
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+    
+    // Save playback state before page unload
+    window.addEventListener('beforeunload', () => {
+        const globalAudio = document.getElementById('global-audio-player');
+        if (globalAudio && window.queueManager && queueManager.getCurrentSong()) {
+            const isPlaying = !globalAudio.paused;
+            const currentTime = globalAudio.currentTime;
+            
+            console.log('Saving playback state before unload:', {isPlaying, currentTime});
+            queueManager.savePlaybackState(currentTime, isPlaying);
+        }
+    });
+}
+
+// Initialize on DOM ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeQueueUI);
+} else {
+    // DOM already loaded
+    initializeQueueUI();
+}
+</script>

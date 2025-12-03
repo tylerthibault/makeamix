@@ -40,6 +40,12 @@
                         </td>
                         <td data-label="Actions">
                             <div class="btn-group">
+                                <button onclick='addSongToQueue({{ song.id }}, {{ song.title|tojson }})' class="btn btn-sm btn-primary" title="Add to queue">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    </svg>
+                                </button>
                                 <a href="{{ url_for('songs.view_song', song_id=song.id) }}"
                                     class="btn btn-sm btn-info">View</a>
                                 <form method="POST" action="{{ url_for('songs.delete_song', song_id=song.id) }}"
@@ -120,6 +126,21 @@
         const openModalBtn = document.getElementById('open-upload-modal');
         const modalOverlay = document.getElementById('upload-song-overlay');
         const closeModalBtn = document.querySelector('[data-modal="upload-song"]');
+
+        // Add song to queue function
+        window.addSongToQueue = function(songId, songTitle) {
+            console.log('Add to Queue clicked for:', songTitle);
+            if (!window.queueManager) {
+                alert('Queue system not loaded. Please refresh the page.');
+                return;
+            }
+            queueManager.addSong({
+                id: songId,
+                title: songTitle,
+                url: `/songs/${songId}`
+            });
+            alert('Song added to queue!');
+        };
 
         if (openModalBtn) {
             openModalBtn.addEventListener('click', () => {

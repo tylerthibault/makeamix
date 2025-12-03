@@ -8,16 +8,26 @@
                 <h1>{{ playlist.name }}</h1>
                 <p class="tagline">{{ songs|length }} songs</p>
             </div>
-            <button id="share-btn" class="btn btn-secondary" title="Share this playlist">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="18" cy="5" r="3"></circle>
-                    <circle cx="6" cy="12" r="3"></circle>
-                    <circle cx="18" cy="19" r="3"></circle>
-                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                </svg>
-                Share
-            </button>
+            <div style="display: flex; gap: 0.5rem;">
+                {% if songs %}
+                <button onclick="playPlaylist()" class="btn btn-primary" title="Play all songs">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                    Play All
+                </button>
+                {% endif %}
+                <button id="share-btn" class="btn btn-secondary" title="Share this playlist">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="18" cy="5" r="3"></circle>
+                        <circle cx="6" cy="12" r="3"></circle>
+                        <circle cx="18" cy="19" r="3"></circle>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                    </svg>
+                    Share
+                </button>
+            </div>
         </div>
     </div>
 
@@ -101,6 +111,36 @@
 </div>
 
 <script>
+// Play entire playlist function
+window.playPlaylist = function() {
+    console.log('Play Playlist clicked');
+    const playlistSongs = [
+        {% for song in songs %}
+        {
+            id: {{ song.id }},
+            title: {{ song.title|tojson }},
+            url: "{{ url_for('songs.view_song', song_id=song.id) }}"
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+    
+    console.log('Playlist songs:', playlistSongs);
+    
+    if (!window.queueManager) {
+        console.error('queueManager not available!');
+        alert('Queue system not loaded. Please refresh the page.');
+        return;
+    }
+    
+    if (playlistSongs.length > 0) {
+        console.log('Replacing queue with', playlistSongs.length, 'songs');
+        queueManager.replaceQueue(playlistSongs, 0);
+    } else {
+        console.log('No songs to play');
+        alert('This playlist is empty!');
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     const songSelector = document.getElementById('song-selector');
     const playlistId = {{ playlist.id }};
