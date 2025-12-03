@@ -1,0 +1,298 @@
+{% extends 'bases/private.html' %}
+
+{% block content %}
+<div class="container has-nav">
+    <div class="header">
+        <div class="header-content">
+            <div>
+                <h1>{{ playlist.name }}</h1>
+                <p class="tagline">{{ songs|length }} songs</p>
+            </div>
+            <button id="share-btn" class="btn btn-secondary" title="Share this playlist">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="18" cy="5" r="3"></circle>
+                    <circle cx="6" cy="12" r="3"></circle>
+                    <circle cx="18" cy="19" r="3"></circle>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                </svg>
+                Share
+            </button>
+        </div>
+    </div>
+
+    <div class="content-section">
+        <h2>Playlist Details</h2>
+        <form method="post" action="{{ url_for('playlists.update_playlist', playlist_id=playlist.id) }}">
+            <div class="details-grid">
+                <div class="detail-column">
+                    <div class="form-group">
+                        <label for="name">Playlist Name</label>
+                        <input type="text" id="name" name="name" value="{{ playlist.name }}" required placeholder="Playlist name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" rows="4" placeholder="Add a description...">{{ playlist.description if playlist.description else '' }}</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="is_public">Visibility</label>
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="is_public" name="is_public" {% if playlist.is_public %}checked{% endif %}>
+                            <label for="is_public" class="checkbox-label">Make this playlist public</label>
+                        </div>
+                        <p class="form-help-text">Public playlists can be viewed by anyone</p>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+
+                <div class="detail-column">
+                    <div class="form-group">
+                        <label>Add Songs</label>
+                        <select id="song-selector" class="form-select">
+                            <option value="">Select a song to add...</option>
+                            {% for song in current_user.songs %}
+                            <option value="{{ song.id }}">{{ song.title }}</option>
+                            {% endfor %}
+                        </select>
+                        <p class="form-help-text">Select a song from your library to add to this playlist</p>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="content-section">
+        <h2>Songs in Playlist</h2>
+        
+        {% if songs %}
+        <div class="playlist-songs" id="playlist-songs">
+            {% for song in songs %}
+            <div class="playlist-song-item" data-song-id="{{ song.id }}">
+                <div class="drag-handle">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <circle cx="4" cy="4" r="1.5"/>
+                        <circle cx="4" cy="8" r="1.5"/>
+                        <circle cx="4" cy="12" r="1.5"/>
+                        <circle cx="12" cy="4" r="1.5"/>
+                        <circle cx="12" cy="8" r="1.5"/>
+                        <circle cx="12" cy="12" r="1.5"/>
+                    </svg>
+                </div>
+                <div class="song-info">
+                    <h4>{{ song.title }}</h4>
+                    <p>Added {{ song.created_at.strftime('%b %d, %Y') }}</p>
+                </div>
+                <div class="song-actions">
+                    <a href="{{ url_for('songs.view_song', song_id=song.id) }}" class="btn btn-sm btn-info">Play</a>
+                    <button class="btn btn-sm btn-danger remove-song-btn" data-song-id="{{ song.id }}">Remove</button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            No songs in this playlist yet. Add some songs above!
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const songSelector = document.getElementById('song-selector');
+    const playlistId = {{ playlist.id }};
+
+    // Add song to playlist
+    if (songSelector) {
+        songSelector.addEventListener('change', async (e) => {
+            const songId = e.target.value;
+            if (!songId) return;
+
+            try {
+                const response = await fetch(`/playlists/${playlistId}/add_song/${songId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    const data = await response.json();
+                    alert(data.error || 'Failed to add song');
+                }
+            } catch (error) {
+                alert('An error occurred');
+            }
+
+            songSelector.value = '';
+        });
+    }
+
+    // Remove song from playlist
+    const removeButtons = document.querySelectorAll('.remove-song-btn');
+    removeButtons.forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const songId = btn.dataset.songId;
+            
+            if (!confirm('Remove this song from the playlist?')) return;
+
+            try {
+                const response = await fetch(`/playlists/${playlistId}/remove_song/${songId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    const data = await response.json();
+                    alert(data.error || 'Failed to remove song');
+                }
+            } catch (error) {
+                alert('An error occurred');
+            }
+        });
+    });
+
+    // Drag and drop reordering (simple implementation)
+    const playlistSongs = document.getElementById('playlist-songs');
+    if (playlistSongs) {
+        let draggedElement = null;
+
+        const songItems = document.querySelectorAll('.playlist-song-item');
+        songItems.forEach(item => {
+            item.draggable = true;
+
+            item.addEventListener('dragstart', (e) => {
+                draggedElement = item;
+                item.style.opacity = '0.5';
+            });
+
+            item.addEventListener('dragend', (e) => {
+                item.style.opacity = '1';
+            });
+
+            item.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+
+            item.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                if (draggedElement !== item) {
+                    const allItems = [...playlistSongs.children];
+                    const draggedIndex = allItems.indexOf(draggedElement);
+                    const targetIndex = allItems.indexOf(item);
+
+                    if (draggedIndex < targetIndex) {
+                        item.after(draggedElement);
+                    } else {
+                        item.before(draggedElement);
+                    }
+
+                    // Save new order
+                    const songIds = [...playlistSongs.children].map(el => el.dataset.songId);
+                    try {
+                        await fetch(`/playlists/${playlistId}/reorder`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ song_ids: songIds })
+                        });
+                    } catch (error) {
+                        console.error('Failed to save order');
+                    }
+                }
+            });
+        });
+    }
+});
+</script>
+
+<!-- Share Modal -->
+<div id="share-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Share Playlist</h2>
+            <button class="modal-close" id="close-share-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="share-section">
+                <h3>QR Code</h3>
+                <div id="qr-code" class="qr-code-container"></div>
+                <p class="form-help-text">Scan this QR code to share the playlist</p>
+            </div>
+            
+            <div class="share-section">
+                <h3>Share Link</h3>
+                <div class="share-link-container">
+                    <input type="text" id="share-link" readonly value="{{ request.url }}">
+                    <button id="copy-link-btn" class="btn btn-primary">Copy</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+// Share functionality
+const shareBtn = document.getElementById('share-btn');
+const shareModal = document.getElementById('share-modal');
+const closeShareModal = document.getElementById('close-share-modal');
+const copyLinkBtn = document.getElementById('copy-link-btn');
+const shareLinkInput = document.getElementById('share-link');
+let qrCodeGenerated = false;
+
+shareBtn.addEventListener('click', () => {
+    shareModal.style.display = 'flex';
+    
+    // Generate QR code only once
+    if (!qrCodeGenerated) {
+        const qrContainer = document.getElementById('qr-code');
+        qrContainer.innerHTML = ''; // Clear any existing content
+        new QRCode(qrContainer, {
+            text: window.location.href,
+            width: 256,
+            height: 256,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H
+        });
+        qrCodeGenerated = true;
+    }
+});
+
+closeShareModal.addEventListener('click', () => {
+    shareModal.style.display = 'none';
+});
+
+// Close modal when clicking outside
+shareModal.addEventListener('click', (e) => {
+    if (e.target === shareModal) {
+        shareModal.style.display = 'none';
+    }
+});
+
+copyLinkBtn.addEventListener('click', () => {
+    shareLinkInput.select();
+    document.execCommand('copy');
+    
+    const originalText = copyLinkBtn.textContent;
+    copyLinkBtn.textContent = 'Copied!';
+    copyLinkBtn.classList.add('btn-success');
+    
+    setTimeout(() => {
+        copyLinkBtn.textContent = originalText;
+        copyLinkBtn.classList.remove('btn-success');
+    }, 2000);
+});
+</script>
+{% endblock content %}

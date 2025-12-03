@@ -3,11 +3,12 @@
 {% block content %}
 <div class="container">
     <div class="header">
-        <div class="header-content">
-            <div>
-                <h1>{{ song.title }}</h1>
-                <p class="tagline">Uploaded {{ song.created_at.strftime('%B %d, %Y at %H:%M') }}</p>
-            </div>
+        <div class="header-top-row">
+            <h1>{{ song.title }}</h1>
+            <button class="btn btn-login" onclick="location.href='{{ url_for('auth.login') }}'">Login</button>
+        </div>
+        <p class="tagline">Uploaded {{ song.created_at.strftime('%B %d, %Y at %H:%M') }}</p>
+        <div class="header-actions">
             <button id="share-btn" class="btn btn-secondary" title="Share this song">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="18" cy="5" r="3"></circle>

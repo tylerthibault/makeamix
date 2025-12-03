@@ -1,3 +1,5 @@
+@import url(bootstrap-overide.css);
+
 /* Color Palette - CSS Variables for Light/Dark Mode */
 :root {
   /* Primary Colors */
@@ -6,14 +8,14 @@
   --color-text-primary: #ffffff;
   --color-text-secondary: #888;
   --color-text-tertiary: #555;
-  
+
   /* Accent Color */
   --color-accent: #00ff00;
-  
+
   /* Border Colors */
   --color-border-primary: #333;
   --color-border-accent: var(--color-accent);
-  
+
   /* Interactive States */
   --color-hover: var(--color-accent);
   --color-active: var(--color-accent);
@@ -44,16 +46,45 @@ body {
 }
 
 /* Header Styles */
-.header-content {
+.header-top-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 2rem;
+  gap: 1rem;
+  margin-bottom: 10px;
   flex-wrap: wrap;
 }
 
-.header-content > div {
+.header-top-row h1 {
   flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.header-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn-login {
+  background: var(--color-accent);
+  color: var(--color-bg-primary);
+  border-color: var(--color-accent);
+  padding: 8px 24px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-login:hover {
+  background: transparent;
+  color: var(--color-accent);
+}
+
+.btn-login::before {
+  background: transparent;
 }
 
 #share-btn {
@@ -65,6 +96,28 @@ body {
 
 #share-btn svg {
   flex-shrink: 0;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: 8px;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.header-content>div {
+  flex: 1;
 }
 
 /* Modal Styles */
@@ -183,26 +236,270 @@ body {
   border-color: #00cc00 !important;
 }
 
+/* Lyrics Editor Controls */
+.lyrics-editor-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 10px;
+  padding: 10px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: 4px;
+  flex-wrap: wrap;
+}
+
+.lyrics-editor-controls .checkbox-wrapper {
+  margin: 0;
+}
+
+.timestamp-help {
+  font-size: 0.85rem;
+  color: var(--color-accent);
+  font-style: italic;
+  letter-spacing: 0.5px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+#lyrics[style*="cursor: crosshair"] {
+  background: rgba(0, 255, 0, 0.02);
+  border-color: var(--color-accent);
+}
+
+/* Playlist Styles */
+.playlists-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.playlist-card {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-primary);
+  padding: 1.5rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.playlist-card:hover {
+  border-color: var(--color-accent);
+  transform: translateY(-2px);
+}
+
+.playlist-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.playlist-card-header h3 {
+  font-size: 1.3rem;
+  font-weight: 400;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.badge-public {
+  background: rgba(0, 255, 0, 0.2);
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+}
+
+.badge-private {
+  background: rgba(136, 136, 136, 0.2);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-primary);
+}
+
+.playlist-description {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.playlist-meta {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--color-text-tertiary);
+  margin-bottom: 1rem;
+}
+
+.playlist-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border-primary);
+}
+
+.playlist-actions form {
+  flex: 1;
+}
+
+.playlist-actions .btn {
+  width: 100%;
+}
+
+/* Playlist Songs List */
+.playlist-songs {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.playlist-song-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: 4px;
+  cursor: move;
+  transition: all 0.2s ease;
+}
+
+.playlist-song-item:hover {
+  border-color: var(--color-accent);
+  background: rgba(0, 255, 0, 0.02);
+}
+
+.drag-handle {
+  color: var(--color-text-tertiary);
+  cursor: grab;
+  display: flex;
+  align-items: center;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.song-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.song-info h4 {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--color-text-primary);
+  margin: 0 0 0.25rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.song-info p {
+  font-size: 0.8rem;
+  color: var(--color-text-tertiary);
+  margin: 0;
+}
+
+.song-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.form-select {
+  width: 100%;
+  padding: 12px;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: 4px;
+  color: var(--color-text-primary);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.form-select option {
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .header-content {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   #share-btn {
     justify-content: center;
   }
-  
+
   .modal-content {
     max-width: 95%;
   }
-  
+
   .share-link-container {
     flex-direction: column;
   }
-  
+
   .share-link-container .btn {
     width: 100%;
+  }
+
+  .lyrics-editor-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 12px;
+  }
+
+  .timestamp-help {
+    font-size: 0.8rem;
+    width: 100%;
+  }
+
+  .playlists-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .playlist-song-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .song-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .song-actions .btn {
+    width: 100%;
+  }
+
+  .playlist-actions {
+    flex-direction: column;
   }
 }

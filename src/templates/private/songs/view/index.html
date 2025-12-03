@@ -89,8 +89,17 @@
                 <div class="detail-column">
                     <div class="form-group">
                         <label for="lyrics">Lyrics</label>
+                        <div class="lyrics-editor-controls">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="timestamp-mode" name="timestamp-mode">
+                                <label for="timestamp-mode" class="checkbox-label">Timestamp Mode</label>
+                            </div>
+                            <span class="timestamp-help" id="timestamp-help" style="display: none;">
+                                Click before a lyrics line to insert timestamp [time=0:00]
+                            </span>
+                        </div>
                         <textarea id="lyrics" name="lyrics" rows="12" placeholder="Add song lyrics here...">{{ song.lyrics if song.lyrics else '' }}</textarea>
-                        <p class="form-help-text">Enter the lyrics for this song</p>
+                        <p class="form-help-text">Enter the lyrics for this song. Enable Timestamp Mode to add time markers.</p>
                     </div>
                 </div>
             </div>
@@ -187,6 +196,62 @@ document.addEventListener('DOMContentLoaded', () => {
     let dataArray;
     let bufferLength;
     let animationId;
+
+    // Timestamp Mode functionality
+    const timestampModeCheckbox = document.getElementById('timestamp-mode');
+    const timestampHelp = document.getElementById('timestamp-help');
+    const lyricsTextarea = document.getElementById('lyrics');
+    let timestampModeActive = false;
+
+    if (timestampModeCheckbox && lyricsTextarea) {
+        timestampModeCheckbox.addEventListener('change', () => {
+            timestampModeActive = timestampModeCheckbox.checked;
+            if (timestampModeActive) {
+                timestampHelp.style.display = 'inline-block';
+                lyricsTextarea.style.cursor = 'crosshair';
+                lyricsTextarea.title = 'Click at the start of a line to insert timestamp';
+            } else {
+                timestampHelp.style.display = 'none';
+                lyricsTextarea.style.cursor = 'text';
+                lyricsTextarea.title = '';
+            }
+        });
+
+        lyricsTextarea.addEventListener('click', (e) => {
+            if (!timestampModeActive || !audio) return;
+
+            const currentTime = audio.currentTime;
+            const minutes = Math.floor(currentTime / 60);
+            const seconds = Math.floor(currentTime % 60);
+            const timestamp = `[time=${minutes}:${seconds.toString().padStart(2, '0')}]\n`;
+
+            // Get cursor position
+            const cursorPos = lyricsTextarea.selectionStart;
+            const textBefore = lyricsTextarea.value.substring(0, cursorPos);
+            const textAfter = lyricsTextarea.value.substring(cursorPos);
+
+            // Find the start of the current line
+            const lastNewline = textBefore.lastIndexOf('\n');
+            const lineStart = lastNewline === -1 ? 0 : lastNewline + 1;
+
+            // Insert timestamp at the start of the line
+            const beforeLine = lyricsTextarea.value.substring(0, lineStart);
+            const afterLine = lyricsTextarea.value.substring(lineStart);
+
+            lyricsTextarea.value = beforeLine + timestamp + afterLine;
+
+            // Move cursor after the timestamp
+            const newCursorPos = lineStart + timestamp.length;
+            lyricsTextarea.setSelectionRange(newCursorPos, newCursorPos);
+            lyricsTextarea.focus();
+
+            // Visual feedback
+            lyricsTextarea.style.backgroundColor = 'rgba(0, 255, 0, 0.1)';
+            setTimeout(() => {
+                lyricsTextarea.style.backgroundColor = '';
+            }, 200);
+        });
+    }
 
     // Tab switching
     const playerTabs = document.querySelectorAll('.player-tab');

@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container has-nav">
     <div class="header">
-        <h1>Your Music</h1>
+        <h1>Your Songs</h1>
         <p class="tagline">{{ current_user.username }}'s Collection</p>
         <div class="content-section">
             <button class="btn btn-primary" id="open-upload-modal">Add New Song</button>
@@ -12,7 +12,7 @@
 
 
     <div class="content-section">
-        <h2>Your Songs</h2>
+        <h2>Songs</h2>
 
         <div class="table-container">
             <table class="data-table">
@@ -27,9 +27,9 @@
                 <tbody>
                     {% for song in current_user.songs %}
                     <tr>
-                        <td>{{ song.title }}</td>
-                        <td>{{ song.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                        <td>
+                        <td data-label="Title">{{ song.title }}</td>
+                        <td data-label="Uploaded At">{{ song.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td data-label="Player">
                             <div class="audio-player-mini">
                                 <button class="play-pause-btn" data-song-id="{{ song.id }}"></button>
                                 <span class="audio-time">0:00</span>
@@ -38,7 +38,7 @@
                                 </audio>
                             </div>
                         </td>
-                        <td>
+                        <td data-label="Actions">
                             <div class="btn-group">
                                 <a href="{{ url_for('songs.view_song', song_id=song.id) }}"
                                     class="btn btn-sm btn-info">View</a>

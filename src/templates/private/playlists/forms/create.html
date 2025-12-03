@@ -1,0 +1,22 @@
+<form method="POST" action="{{ url_for('playlists.create_playlist') }}">
+    <div class="form-group">
+        <label for="name">Playlist Name</label>
+        <input type="text" id="name" name="name" required placeholder="My Awesome Playlist">
+    </div>
+
+    <div class="form-group">
+        <label for="description">Description (Optional)</label>
+        <textarea id="description" name="description" rows="3" placeholder="Describe your playlist..."></textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="is_public">Visibility</label>
+        <div class="checkbox-wrapper">
+            <input type="checkbox" id="is_public" name="is_public">
+            <label for="is_public" class="checkbox-label">Make this playlist public</label>
+        </div>
+        <p class="form-help-text">Public playlists can be viewed by anyone</p>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create Playlist</button>
+</form>

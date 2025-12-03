@@ -13,6 +13,7 @@ class User(db.Model):
 
     log_entries = db.relationship('Logbook', back_populates='user')
     songs = db.relationship('Song', back_populates='user')
+    playlists = db.relationship('Playlist', back_populates='user')
 
     def to_dict(self):
         """Simple serialization"""

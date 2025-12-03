@@ -38,6 +38,7 @@ def init_db(app):
         from src.models.user import User
         from src.models.logbook import Logbook
         from src.models.song import Song
+        from src.models.playlist import Playlist
         db.create_all()
 
 
@@ -59,6 +60,9 @@ def init_blueprints(app):
 
     from src.controllers.song import song_bp
     app.register_blueprint(song_bp)
+
+    from src.controllers.playlist import playlist_bp
+    app.register_blueprint(playlist_bp)
 
 
 def error_handlers(app):
