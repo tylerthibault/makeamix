@@ -25,7 +25,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Create necessary directories
-RUN mkdir -p instance logs
+RUN mkdir -p instance logs uploads/songs
+
+# Create volume mount point for persistent file storage
+VOLUME ["/app/uploads"]
 
 # Expose port (CapRover will map this)
 EXPOSE 80

@@ -20,7 +20,22 @@ Configure these environment variables in CapRover for your app:
 
 ### Required
 - `SECRET_KEY`: A strong secret key for Flask sessions (generate a random 32+ character string)
-- `DATABASE_URL`: Database connection string (PostgreSQL recommended for production)
+
+### Database Configuration
+- `DATABASE_URL`: Database connection string
+  - MySQL: `mysql://username:password@hostname:3306/database_name`
+  - PostgreSQL: `postgresql://username:password@hostname:port/database_name`
+  - SQLite (dev only): Leave empty to use `sqlite:///data/makeamix.db`
+
+### MinIO Configuration (S3-Compatible Object Storage)
+If you want to use MinIO for audio file storage instead of local filesystem:
+- `MINIO_ENDPOINT`: MinIO server endpoint (e.g., `minio.yourdomain.com:9000`)
+- `MINIO_ACCESS_KEY`: MinIO access key
+- `MINIO_SECRET_KEY`: MinIO secret key
+- `MINIO_BUCKET`: Bucket name for storing songs (e.g., `makeamix-songs`)
+- `MINIO_SECURE`: Set to `true` if using HTTPS, `false` for HTTP (default: `false`)
+
+**Note:** If MinIO environment variables are set, the app will automatically use MinIO for storage. Otherwise, it falls back to local filesystem storage.
 
 ### Optional
 - `FLASK_ENV`: Set to `production` (default in Dockerfile)
@@ -28,8 +43,49 @@ Configure these environment variables in CapRover for your app:
 ### Example Environment Variables
 ```
 SECRET_KEY=your-super-secret-key-here-should-be-very-long-and-random
-DATABASE_URL=postgresql://username:password@hostname:port/database_name
+DATABASE_URL=mysql://makeamix_user:password@mysql-host:3306/makeamix_db
+MINIO_ENDPOINT=minio.yourdomain.com:9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin123
+MINIO_BUCKET=makeamix-songs
+MINIO_SECURE=false
 ```
+
+## File Storage Options
+
+### Option 1: MinIO Object Storage (Recommended for Production)
+MinIO provides S3-compatible object storage that's perfect for distributed deployments:
+- **Scalable**: No container volume management needed
+- **Distributed**: Works across multiple app instances
+- **Durable**: Files are not tied to container lifecycle
+- **Setup**: Configure MinIO environment variables (see above)
+
+### Option 2: Local Filesystem with Persistent Volumes
+If you're not using MinIO, configure a persistent volume in CapRover:
+
+1. **Go to your app in CapRover dashboard**
+2. **Navigate to "App Configs" tab**
+3. **Scroll to "Persistent Directories"**
+4. **Add a new persistent directory:**
+   - **Path in App:** `/app/uploads`
+   - **Label:** `makeamix-uploads` (or any name you prefer)
+5. **Click "Save & Update"**
+
+**Note:** The app automatically detects the storage mode:
+- If `MINIO_ENDPOINT` is set → Uses MinIO
+- Otherwise → Uses local filesystem (`/app/uploads`)
+- Server reboots
+
+**Without this configuration, all uploaded songs will be deleted when the container restarts!**
+
+### Alternative: Cloud Storage (Optional)
+
+For better scalability and reliability, consider using cloud storage services like:
+- AWS S3
+- DigitalOcean Spaces
+- Backblaze B2
+
+This would require code modifications to integrate with cloud storage APIs.
 
 ## Deployment Options
 

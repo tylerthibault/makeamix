@@ -74,9 +74,18 @@ def serve_audio(song_id):
         if not current_user or song.user_id != current_user.id:
             abort(403)
     
-    # Get file path and serve
-    file_path = FileService.get_file_path(song.file_path)
-    if not file_path or not file_path.exists():
+    # Get file from storage (MinIO or local)
+    file_data = FileService.get_file_path(song.file_path)
+    if not file_data:
         abort(404)
     
-    return send_file(file_path, mimetype='audio/mpeg')
+    # For MinIO, file_data is BytesIO; for local, it's a Path
+    if FileService.STORAGE_MODE == 'minio':
+        # Stream from BytesIO object
+        file_data.seek(0)
+        return send_file(file_data, mimetype='audio/mpeg', download_name=f'{song.title}.mp3')
+    else:
+        # Serve from local filesystem
+        if not file_data.exists():
+            abort(404)
+        return send_file(file_data, mimetype='audio/mpeg')

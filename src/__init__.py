@@ -1,3 +1,4 @@
+import os
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
@@ -28,10 +29,17 @@ def create_app():
 # init db
 def init_db(app):
     """
-        initialize the sql alchemy sqlite database. Will create all the tables in the model files. 
+        initialize the sql alchemy database. Will create all the tables in the model files. 
     """
     
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///makeamix.db'
+    # Use MySQL if DATABASE_URL is provided, otherwise fall back to SQLite
+    database_url = os.environ.get('DATABASE_URL', 'sqlite:///makeamix.db')
+    
+    # Convert mysql:// to mysql+pymysql:// if needed
+    if database_url.startswith('mysql://'):
+        database_url = database_url.replace('mysql://', 'mysql+pymysql://', 1)
+    
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
     with app.app_context():
